@@ -3,6 +3,7 @@ import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { backupService, type BackupFile } from '@/services/backup.service';
 import { questionService } from '@/services/question.service';
+import { autoBackupService } from '@/services/autobackup.service';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { APP_NAME, APP_VERSION } from '@/lib/constants';
@@ -104,6 +105,23 @@ export function SettingsPage() {
         {storage.percent > 80 && (
           <div className="text-xs text-red-500 mt-1.5">⚠️ 存储空间不足，建议导出备份后清理</div>
         )}
+      </div>
+
+      {/* Auto Backup */}
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">自动备份</h3>
+        <p className="text-xs text-gray-400 mb-2">数据变更后自动保存到浏览器本地存储，防止数据丢失</p>
+        {(() => {
+          const info = autoBackupService.getBackupInfo();
+          return info ? (
+            <div className="text-sm space-y-1">
+              <div className="flex justify-between"><span className="text-gray-500">上次备份</span><span>{info.date}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">大小</span><span>{info.size}</span></div>
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400">暂无自动备份</div>
+          );
+        })()}
       </div>
 
       {/* Backup */}
