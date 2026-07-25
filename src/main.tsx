@@ -6,19 +6,16 @@ import './styles/globals.css';
 import { db } from '@/db/database';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 import { uid } from '@/lib/uid';
-import { autoBackupService } from '@/services/autobackup.service';
+import { syncService } from '@/services/sync.service';
 
 async function initDefaults() {
   try {
+    // Try sync from cloud first
+    await syncService.fullSync();
+
+    // If still empty, init defaults
     const count = await db.categories.count();
     if (count === 0) {
-      // Check if we have auto-backup to restore
-      const restored = await autoBackupService.restore();
-      if (restored) {
-        console.log('Auto-backup restored successfully');
-        return;
-      }
-      // Otherwise init defaults
       const now = Date.now();
       await db.categories.bulkAdd(
         DEFAULT_CATEGORIES.map((c, i) => ({
@@ -29,16 +26,14 @@ async function initDefaults() {
           updatedAt: now,
         }))
       );
+      syncService.pushAll();
     }
   } catch (e) {
-    console.error('DB init error:', e);
+    console.error('Init error:', e);
   }
 }
 
 initDefaults().finally(() => {
-  // Start auto-backup
-  autoBackupService.startAutoBackup();
-
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <App />

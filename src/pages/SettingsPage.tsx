@@ -3,7 +3,7 @@ import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { backupService, type BackupFile } from '@/services/backup.service';
 import { questionService } from '@/services/question.service';
-import { autoBackupService } from '@/services/autobackup.service';
+import { syncService } from '@/services/sync.service';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { APP_NAME, APP_VERSION } from '@/lib/constants';
@@ -107,23 +107,6 @@ export function SettingsPage() {
         )}
       </div>
 
-      {/* Auto Backup */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">自动备份</h3>
-        <p className="text-xs text-gray-400 mb-2">数据变更后自动保存到浏览器本地存储，防止数据丢失</p>
-        {(() => {
-          const info = autoBackupService.getBackupInfo();
-          return info ? (
-            <div className="text-sm space-y-1">
-              <div className="flex justify-between"><span className="text-gray-500">上次备份</span><span>{info.date}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">大小</span><span>{info.size}</span></div>
-            </div>
-          ) : (
-            <div className="text-xs text-gray-400">暂无自动备份</div>
-          );
-        })()}
-      </div>
-
       {/* Backup */}
       <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
         <h3 className="text-sm font-semibold text-gray-700">数据备份</h3>
@@ -143,6 +126,29 @@ export function SettingsPage() {
           onChange={handleImport}
           className="hidden"
         />
+      </div>
+
+      {/* Cloud Sync */}
+      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+        <h3 className="text-sm font-semibold text-gray-700">☁️ 云同步</h3>
+        <p className="text-xs text-gray-400">数据保存在 Supabase 云端，多设备自动同步</p>
+        <div className="text-xs text-gray-500 space-y-1">
+          <div>设备 ID：<span className="font-mono text-[10px] bg-gray-100 px-1 rounded">{syncService.deviceId.slice(0, 8)}...</span></div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="primary" size="sm" className="flex-1" onClick={async () => {
+            toast('同步中...', 'info');
+            try {
+              await syncService.fullSync();
+              toast('同步完成', 'success');
+            } catch { toast('同步失败', 'error'); }
+          }}>🔄 立即同步</Button>
+          <Button variant="ghost" size="sm" className="flex-1" onClick={() => {
+            navigator.clipboard.writeText(syncService.deviceId);
+            toast('设备 ID 已复制', 'success');
+          }}>📋 复制设备 ID</Button>
+        </div>
+        <p className="text-[10px] text-gray-300">在其他设备上粘贴相同的设备 ID 即可同步数据</p>
       </div>
 
       {/* Danger zone */}
