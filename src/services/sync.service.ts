@@ -100,7 +100,15 @@ export const syncService = {
 
   async fullSync() {
     await this.registerDevice();
+    await this.pushAll();  // push first so local changes aren't overwritten
     await this.pullAll();
-    await this.pushAll();
+  },
+
+  // Sync single item change
+  async syncOne(table: string, row: any) {
+    try {
+      const payload = { ...toSnake(row), device_id: this.deviceId };
+      await supabase.from(table).upsert(payload, { onConflict: 'id' });
+    } catch (e) { log.warn(`Sync ${table} failed`, e); }
   },
 };
