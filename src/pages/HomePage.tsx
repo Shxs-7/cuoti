@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { categoryService } from '@/services/category.service';
+import { syncService } from '@/services/sync.service';
 import { questionService } from '@/services/question.service';
 import { reviewService } from '@/services/review.service';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -72,8 +73,12 @@ export function HomePage() {
       : categoryService.create({ name, icon: '📋', color: '#6366f1' });
 
     promise
-      .then(() => {
+      .then(async () => {
         toast(editingCat ? '已更新' : '分类已创建', 'success');
+        // Sync to cloud
+        const cats = await categoryService.getAll();
+        const changed = cats.find(c => editingCat ? c.id === editingCat.id : c.name === name);
+        if (changed) syncService.syncOne('categories', changed);
         closeForm();
         loadData();
       })

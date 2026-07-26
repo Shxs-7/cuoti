@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { questionService } from '@/services/question.service';
+import { syncService } from '@/services/sync.service';
 import { reviewService } from '@/services/review.service';
 import { tagService } from '@/services/tag.service';
 import { Button } from '@/components/ui/Button';
@@ -91,7 +92,7 @@ export function QuestionDetailPage() {
     if (!questionId || !eTitle.trim()) { toast('标题不能为空', 'error'); return; }
     setSaving(true);
     try {
-      await questionService.update(questionId, {
+      const updateData = {
         title: eTitle.trim(),
         content: eContent,
         answer: eAnswer,
@@ -103,7 +104,10 @@ export function QuestionDetailPage() {
         photos: ePhotos,
         categoryId: question!.categoryId,
         folderId: question!.folderId,
-      });
+      };
+      await questionService.update(questionId, updateData);
+      const updated = await questionService.getById(questionId);
+      if (updated) syncService.syncOne('questions', updated);
       toast('已更新', 'success');
       setEditing(false);
       loadData();
