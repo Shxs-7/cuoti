@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const tabs = [
   { path: '/', label: '错题', icon: '📋' },
+  { path: '/search', label: '搜索', icon: '🔍' },
   { path: '/journal', label: '日记', icon: '📔' },
   { path: '/review', label: '复习', icon: '📝' },
   { path: '/ai', label: 'AI', icon: '🤖' },
@@ -22,11 +23,11 @@ export function BottomNav() {
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-[60px] min-h-[44px] ${
+              className={`flex flex-col items-center justify-center gap-0.5 min-h-[44px] flex-1 ${
                 isActive ? 'text-primary-600' : 'text-gray-400'
               }`}
             >
-              <span className="text-xl">{tab.icon}</span>
+              <span className="text-lg">{tab.icon}</span>
               <span className="text-[10px] font-medium">{tab.label}</span>
             </button>
           );
