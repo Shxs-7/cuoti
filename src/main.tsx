@@ -10,10 +10,6 @@ import { syncService } from '@/services/sync.service';
 
 async function initDefaults() {
   try {
-    // Try sync from cloud first
-    await syncService.fullSync();
-
-    // If still empty, init defaults
     const count = await db.categories.count();
     if (count === 0) {
       const now = Date.now();
@@ -26,17 +22,22 @@ async function initDefaults() {
           updatedAt: now,
         }))
       );
-      syncService.pushAll();
     }
   } catch (e) {
     console.error('Init error:', e);
   }
 }
 
+// Render immediately, don't wait for network
 initDefaults().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <App />
     </React.StrictMode>
   );
+
+  // Background sync after page is live
+  setTimeout(() => {
+    syncService.fullSync().catch(e => console.warn('Background sync failed:', e));
+  }, 2000);
 });

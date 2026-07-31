@@ -6,6 +6,7 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('sync');
 const DEVICE_KEY = 'cuoti-device-id';
+const SYNC_TIMEOUT = 8000; // 8 seconds max per sync operation
 
 function getDeviceId(): string {
   let id = localStorage.getItem(DEVICE_KEY);
@@ -99,9 +100,18 @@ export const syncService = {
   },
 
   async fullSync() {
-    await this.registerDevice();
-    await this.pushAll();  // push first so local changes aren't overwritten
-    await this.pullAll();
+    try {
+      await Promise.race([
+        (async () => {
+          await this.registerDevice();
+          await this.pushAll();
+          await this.pullAll();
+        })(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Sync timeout')), SYNC_TIMEOUT)),
+      ]);
+    } catch (e) {
+      log.warn('Full sync skipped (timeout or network error)');
+    }
   },
 
   // Sync single item change
