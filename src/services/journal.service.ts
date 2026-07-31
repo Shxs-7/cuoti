@@ -36,7 +36,7 @@ export const journalService = {
     return entry;
   },
 
-  async update(id: string, data: Partial<Pick<JournalEntry, 'category' | 'content' | 'wrongReasons' | 'tags'>>) {
+  async update(id: string, data: Partial<Pick<JournalEntry, 'date' | 'category' | 'content' | 'wrongReasons' | 'tags'>>) {
     await db.journal.update(id, { ...data, updatedAt: Date.now() });
   },
 

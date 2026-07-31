@@ -106,14 +106,15 @@ export const questionService = {
     // Search across multiple fields using Dexie filter
     const all = await db.questions.reverse().sortBy('createdAt');
     return all.filter(item => {
+      const tags = Array.isArray(item.tags) ? item.tags : [];
       const searchText = [
-        item.title,
-        item.content,
-        item.answer,
-        item.wrongAnswer,
-        item.analysis,
-        item.source,
-        ...item.tags,
+        item.title ?? '',
+        item.content ?? '',
+        item.answer ?? '',
+        item.wrongAnswer ?? '',
+        item.analysis ?? '',
+        item.source ?? '',
+        ...tags,
       ].join(' ').toLowerCase();
       return searchText.includes(q);
     });

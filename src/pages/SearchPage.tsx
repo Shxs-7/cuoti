@@ -50,27 +50,30 @@ export function SearchPage() {
     let filteredQ = questions;
     if (keywords.length > 0) {
       filteredQ = questions.filter(item => {
-        const text = [item.title, item.content, item.answer, item.wrongAnswer,
-          item.analysis, item.source, ...item.tags].join(' ').toLowerCase();
+        const tags = Array.isArray(item.tags) ? item.tags : [];
+        const text = [item.title ?? '', item.content ?? '', item.answer ?? '',
+          item.wrongAnswer ?? '', item.analysis ?? '', item.source ?? '', ...tags]
+          .join(' ').toLowerCase();
         return keywords.some(k => text.includes(k));
       });
     }
 
     // Filter by tag
     if (tag) {
-      filteredQ = filteredQ.filter(item => item.tags.includes(tag));
+      filteredQ = filteredQ.filter(item => Array.isArray(item.tags) && item.tags.includes(tag));
     }
 
     // Also search knowledge points
     let filteredKp = kps;
     if (keywords.length > 0) {
       filteredKp = kps.filter(kp => {
-        const text = [kp.title, kp.content, ...kp.tags].join(' ').toLowerCase();
+        const tags = Array.isArray(kp.tags) ? kp.tags : [];
+        const text = [kp.title ?? '', kp.content ?? '', ...tags].join(' ').toLowerCase();
         return keywords.some(k => text.includes(k));
       });
     }
     if (tag) {
-      filteredKp = filteredKp.filter(kp => kp.tags.includes(tag));
+      filteredKp = filteredKp.filter(kp => Array.isArray(kp.tags) && kp.tags.includes(tag));
     }
 
     // Build results with category/folder context
@@ -180,7 +183,7 @@ export function SearchPage() {
                         {DIFFICULTY_LABELS[q.difficulty]}
                       </span>
                     )}
-                    {(isQuestion ? q.tags : kp.tags).slice(0, 4).map(t => (
+                    {(Array.isArray(isQuestion ? q.tags : kp.tags) ? (isQuestion ? q.tags : kp.tags) : []).slice(0, 4).map(t => (
                       <span key={t} onClick={(ev) => { ev.stopPropagation(); handleTagClick(t); }}
                         className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-500 cursor-pointer active:bg-blue-100"
                       >{t}</span>

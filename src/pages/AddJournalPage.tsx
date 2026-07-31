@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { journalService } from '@/services/journal.service';
@@ -7,12 +7,13 @@ import { JOURNAL_CATEGORIES, CATEGORY_ICONS } from '@/models/journal';
 
 export function AddJournalPage() {
   const { entryId } = useParams<{ entryId: string }>();
+  const [searchParams] = useSearchParams();
   const { setTitle } = useAppStore();
   const toast = useUIStore(s => s.toast);
   const navigate = useNavigate();
   const isEdit = !!entryId;
 
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState(JOURNAL_CATEGORIES[0]);
   const [content, setContent] = useState('');
   const [wrongReasons, setWrongReasons] = useState('');
@@ -39,6 +40,7 @@ export function AddJournalPage() {
     try {
       if (isEdit && entryId) {
         await journalService.update(entryId, {
+          date,
           category,
           content: content.trim(),
           wrongReasons: wrongReasons.trim(),
@@ -65,13 +67,11 @@ export function AddJournalPage() {
   return (
     <div className="space-y-4 pb-6">
       {/* Date */}
-      {!isEdit && (
-        <div>
-          <label className="text-xs text-gray-500 mb-1 block">日期</label>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-base outline-none focus:border-primary-400 bg-white" />
-        </div>
-      )}
+      <div>
+        <label className="text-xs text-gray-500 mb-1 block">日期</label>
+        <input type="date" value={date} onChange={e => setDate(e.target.value)}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-base outline-none focus:border-primary-400 bg-white" />
+      </div>
 
       {/* Category */}
       <div>

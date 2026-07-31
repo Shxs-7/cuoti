@@ -37,10 +37,10 @@ export function AIPage() {
   };
 
   const runAI = async () => {
-    if (!aiService.isConfigured()) { setShowSettings(true); return; }
     setLoading(true);
     setResult('');
     try {
+      // Works without API key - uses local rule engine
       const summary = await aiService.summarize();
       setResult(summary);
     } catch (e) {
