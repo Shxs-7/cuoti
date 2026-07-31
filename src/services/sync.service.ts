@@ -51,6 +51,7 @@ const TABLE_MAP: Record<string, { local: any; remote: string }> = {
   tags: { local: db.tags, remote: 'tags' },
   reviews: { local: db.reviews, remote: 'reviews' },
   knowledgePoints: { local: db.knowledgePoints, remote: 'knowledge_points' },
+  journal: { local: db.journal, remote: 'journal' },
 };
 
 export const syncService = {

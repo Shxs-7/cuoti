@@ -11,8 +11,20 @@ export class CuotiDatabase extends Dexie {
   journal!: Table<JournalEntry, string>;
 
   constructor() {
-    super('cuoti-db-v5');
+    // WARNING: Do NOT change the database name. Use version() for schema changes.
+    super('cuoti-db');
+
+    // Version 1: Core tables
     this.version(1).stores({
+      categories: 'id, name, sortOrder',
+      folders: 'id, categoryId, name',
+      questions: 'id, folderId, categoryId, *tags, difficulty, createdAt',
+      tags: 'id, &name, questionCount',
+      reviews: 'questionId, reviewCount, lastReviewedAt, masteryLevel',
+    });
+
+    // Version 2: Added knowledge points + journal
+    this.version(2).stores({
       categories: 'id, name, sortOrder',
       folders: 'id, categoryId, name',
       questions: 'id, folderId, categoryId, *tags, difficulty, createdAt',
