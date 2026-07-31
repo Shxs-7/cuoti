@@ -65,7 +65,7 @@ export function QuestionDetailPage() {
     setEAnalysis(question.analysis);
     setESource(question.source);
     setEDiff(question.difficulty);
-    setETags([...question.tags]);
+    setETags(Array.isArray(question.tags) ? [...question.tags] : []);
     setEPhotos([...question.photos]);
     setEditing(true);
   };
@@ -100,7 +100,7 @@ export function QuestionDetailPage() {
         analysis: eAnalysis,
         source: eSource,
         difficulty: eDiff,
-        tags: eTags,
+        tags: Array.isArray(eTags) ? eTags : [],
         photos: ePhotos,
         categoryId: question!.categoryId,
         folderId: question!.folderId,
@@ -150,7 +150,7 @@ export function QuestionDetailPage() {
             <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
               {DIFFICULTY_LABELS[question.difficulty] || '中等'}
             </span>
-            {!editing && question.tags.map(t => <Badge key={t} text={t} />)}
+            {!editing && Array.isArray(question.tags) && question.tags.map((t: string) => <Badge key={t} text={t} />)}
           </div>
         </div>
         {!editing && (

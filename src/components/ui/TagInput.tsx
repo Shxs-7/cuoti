@@ -29,6 +29,13 @@ export function TagInput({ tags, allTags, onChange }: Props) {
     onChange(tags.filter(t => t !== name));
   };
 
+  const handleBlur = () => {
+    // Auto-add tag when input loses focus
+    if (input.trim()) {
+      addTag(input);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -65,9 +72,12 @@ export function TagInput({ tags, allTags, onChange }: Props) {
             value={input}
             onChange={e => { setInput(e.target.value); setShowSuggestions(true); }}
             onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            onBlur={() => {
+              setTimeout(() => setShowSuggestions(false), 150);
+              handleBlur();
+            }}
             onKeyDown={handleKeyDown}
-            placeholder={tags.length === 0 ? '输入标签后按回车...' : ''}
+            placeholder={tags.length === 0 ? '输入标签，按回车或点其他地方添加' : '继续添加...'}
             className="w-full py-1 px-1 text-sm outline-none bg-transparent min-w-[80px]"
           />
           {showSuggestions && input && suggestions.length > 0 && (
