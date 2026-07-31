@@ -141,7 +141,6 @@ export function AddQuestionPage() {
           type="file"
           accept="image/*"
           multiple
-          capture="environment"
           onChange={handlePhotoAdd}
           className="hidden"
         />
