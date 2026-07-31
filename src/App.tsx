@@ -12,6 +12,9 @@ import { ReviewSessionPage } from '@/pages/ReviewSessionPage';
 import { KnowledgePage } from '@/pages/KnowledgePage';
 import { KnowledgeDetailPage } from '@/pages/KnowledgeDetailPage';
 import { AddKnowledgePage } from '@/pages/AddKnowledgePage';
+import { JournalPage } from '@/pages/JournalPage';
+import { AddJournalPage } from '@/pages/AddJournalPage';
+import { AIPage } from '@/pages/AIPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
 export default function App() {
@@ -30,6 +33,10 @@ export default function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/review/session" element={<ReviewSessionPage />} />
+          <Route path="/journal" element={<JournalPage />} />
+          <Route path="/journal/new" element={<AddJournalPage />} />
+          <Route path="/journal/edit/:entryId" element={<AddJournalPage />} />
+          <Route path="/ai" element={<AIPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
         <Toast />

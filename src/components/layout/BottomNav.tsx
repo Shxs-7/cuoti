@@ -2,9 +2,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const tabs = [
   { path: '/', label: '错题', icon: '📋' },
-  { path: '/search', label: '搜索', icon: '🔍' },
+  { path: '/journal', label: '日记', icon: '📔' },
   { path: '/review', label: '复习', icon: '📝' },
-  { path: '/settings', label: '设置', icon: '⚙️' },
+  { path: '/ai', label: 'AI', icon: '🤖' },
 ];
 
 export function BottomNav() {

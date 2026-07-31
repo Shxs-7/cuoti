@@ -8,3 +8,5 @@ export { TAG_COLORS } from './tag';
 export type { ReviewInfo } from './review';
 export type { KnowledgePoint } from './knowledge';
 export { KP_COLORS } from './knowledge';
+export type { JournalEntry } from './journal';
+export { JOURNAL_CATEGORIES, CATEGORY_ICONS } from './journal';
