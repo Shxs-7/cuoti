@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
@@ -9,7 +9,7 @@ import { tagService } from '@/services/tag.service';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { TagInput } from '@/components/ui/TagInput';
+import { TagInput, type TagInputHandle } from '@/components/ui/TagInput';
 import type { Question, ReviewInfo, Tag } from '@/models';
 import { DIFFICULTY_LABELS } from '@/models/question';
 import { formatDateTime } from '@/lib/date';
@@ -28,6 +28,7 @@ export function QuestionDetailPage() {
   const [editing, setEditing] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [saving, setSaving] = useState(false);
+  const tagInputRef = useRef<TagInputHandle>(null);
 
   // Edit form state
   const [eTitle, setETitle] = useState('');
@@ -89,6 +90,8 @@ export function QuestionDetailPage() {
   };
 
   const saveEdit = async () => {
+    // Flush pending tag input before saving
+    tagInputRef.current?.flush();
     if (!questionId || !eTitle.trim()) { toast('标题不能为空', 'error'); return; }
     setSaving(true);
     try {
@@ -225,7 +228,7 @@ export function QuestionDetailPage() {
               </div>
             </div>
 
-            <TagInput tags={eTags} allTags={allTags} onChange={setETags} />
+            <TagInput ref={tagInputRef} tags={eTags} allTags={allTags} onChange={setETags} />
 
             <div className="flex gap-2 pt-2">
               <button type="button"

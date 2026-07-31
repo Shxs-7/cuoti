@@ -1,5 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import type { Tag } from '@/models';
+
+export interface TagInputHandle {
+  flush: () => void; // 把输入框当前文字强制转为标签
+}
 
 interface Props {
   tags: string[];
@@ -7,7 +11,9 @@ interface Props {
   onChange: (tags: string[]) => void;
 }
 
-export function TagInput({ tags, allTags, onChange }: Props) {
+export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
+  { tags, allTags, onChange }, ref
+) {
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,15 +28,22 @@ export function TagInput({ tags, allTags, onChange }: Props) {
       onChange([...tags, trimmed]);
     }
     setInput('');
-    inputRef.current?.focus();
   };
+
+  // 暴露给外部：保存前调用，确保输入框里的文字不会丢
+  useImperativeHandle(ref, () => ({
+    flush: () => {
+      if (input.trim()) {
+        addTag(input);
+      }
+    },
+  }), [input, tags]);
 
   const removeTag = (name: string) => {
     onChange(tags.filter(t => t !== name));
   };
 
   const handleBlur = () => {
-    // Auto-add tag when input loses focus
     if (input.trim()) {
       addTag(input);
     }
@@ -100,4 +113,4 @@ export function TagInput({ tags, allTags, onChange }: Props) {
       </div>
     </div>
   );
-}
+});

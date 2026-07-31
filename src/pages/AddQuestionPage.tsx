@@ -10,7 +10,7 @@ import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
-import { TagInput } from '@/components/ui/TagInput';
+import { TagInput, type TagInputHandle } from '@/components/ui/TagInput';
 import type { Tag, Folder } from '@/models';
 import { DIFFICULTY_LABELS } from '@/models/question';
 
@@ -33,6 +33,7 @@ export function AddQuestionPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const tagInputRef = useRef<TagInputHandle>(null);
 
   useEffect(() => {
     setTitle('添加错题');
@@ -71,6 +72,8 @@ export function AddQuestionPage() {
   };
 
   const handleSubmit = async () => {
+    // Flush pending tag input before saving
+    tagInputRef.current?.flush();
     if (!title.trim()) { toast('标题不能为空', 'error'); return; }
     if (!folderId) { toast('请先选择文件夹', 'error'); return; }
 
@@ -172,7 +175,7 @@ export function AddQuestionPage() {
         </div>
       </div>
 
-      <TagInput tags={tags} allTags={allTags} onChange={setTags} />
+      <TagInput ref={tagInputRef} tags={tags} allTags={allTags} onChange={setTags} />
 
       <div className="flex gap-3 pt-2">
         <Button variant="secondary" className="flex-1" onClick={() => navigate(-1)}>取消</Button>
