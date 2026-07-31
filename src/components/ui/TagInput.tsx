@@ -22,11 +22,15 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
     .filter(t => !tags.includes(t.name) && t.name.includes(input))
     .slice(0, 6);
 
-  const addTag = (name: string) => {
-    const trimmed = name.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      onChange([...tags, trimmed]);
+  const addTags = (raw: string) => {
+    // 支持逗号分隔一次添加多个标签
+    const names = raw.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+    if (names.length === 0) return;
+    const newTags = [...tags];
+    for (const n of names) {
+      if (!newTags.includes(n)) newTags.push(n);
     }
+    onChange(newTags);
     setInput('');
   };
 
@@ -34,7 +38,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
   useImperativeHandle(ref, () => ({
     flush: () => {
       if (input.trim()) {
-        addTag(input);
+        addTags(input);
       }
     },
   }), [input, tags]);
@@ -45,7 +49,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
 
   const handleBlur = () => {
     if (input.trim()) {
-      addTag(input);
+      addTags(input);
     }
   };
 
@@ -53,11 +57,32 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
     if (e.key === 'Enter') {
       e.preventDefault();
       if (input.trim()) {
-        addTag(input);
+        addTags(input);
       }
     } else if (e.key === 'Backspace' && !input && tags.length > 0) {
       removeTag(tags[tags.length - 1]);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 输入逗号时自动把前面的内容添加为标签
+    if (/[,，]/.test(value)) {
+      const parts = value.split(/[,，]/);
+      const pending = parts.slice(0, -1).join(',');
+      if (pending.trim()) {
+        const names = pending.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+        const newTags = [...tags];
+        for (const n of names) {
+          if (!newTags.includes(n)) newTags.push(n);
+        }
+        onChange(newTags);
+      }
+      setInput(parts[parts.length - 1].trim());
+    } else {
+      setInput(value);
+    }
+    setShowSuggestions(true);
   };
 
   return (
@@ -83,14 +108,14 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
           <input
             ref={inputRef}
             value={input}
-            onChange={e => { setInput(e.target.value); setShowSuggestions(true); }}
+            onChange={handleChange}
             onFocus={() => setShowSuggestions(true)}
             onBlur={() => {
               setTimeout(() => setShowSuggestions(false), 150);
               handleBlur();
             }}
             onKeyDown={handleKeyDown}
-            placeholder={tags.length === 0 ? '输入标签，按回车或点其他地方添加' : '继续添加...'}
+            placeholder={tags.length === 0 ? '输入标签，逗号分隔多个' : '继续添加，逗号分隔...'}
             className="w-full py-1 px-1 text-sm outline-none bg-transparent min-w-[80px]"
           />
           {showSuggestions && input && suggestions.length > 0 && (
@@ -100,7 +125,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
                   key={s.id}
                   type="button"
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                  onMouseDown={(e) => { e.preventDefault(); addTag(s.name); }}
+                  onMouseDown={(e) => { e.preventDefault(); addTags(s.name); }}
                 >
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
                   {s.name}
