@@ -7,6 +7,7 @@ import { folderService } from '@/services/folder.service';
 import { syncService } from '@/services/sync.service';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Category, Folder } from '@/models';
 
 export function CategoryPage() {
@@ -20,6 +21,7 @@ export function CategoryPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Folder | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLInputElement>(null);
 
@@ -122,13 +124,7 @@ export function CategoryPage() {
                 className="w-7 h-7 rounded-full bg-blue-50 text-blue-400 flex items-center justify-center text-xs active:bg-blue-100"
               >✎</button>
               <button
-                onClick={async () => {
-                  if (confirm('删除此文件夹及其所有错题？')) {
-                    await folderService.remove(f.id);
-                    toast('已删除', 'success');
-                    loadData();
-                  }
-                }}
+                onClick={() => setDeleteTarget(f)}
                 className="w-7 h-7 rounded-full bg-red-50 text-red-400 flex items-center justify-center text-xs active:bg-red-100"
               >🗑</button>
               <span className="text-gray-300 ml-1">›</span>
@@ -170,6 +166,26 @@ export function CategoryPage() {
       ) : (
         <Button className="w-full" onClick={openAdd}>+ 新建文件夹</Button>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          try {
+            await folderService.remove(deleteTarget.id);
+            toast('已删除', 'success');
+            setDeleteTarget(null);
+            loadData();
+          } catch (e: unknown) {
+            toast('删除失败: ' + (e instanceof Error ? e.message : ''), 'error');
+          }
+        }}
+        title="确认删除"
+        message={`删除文件夹「${deleteTarget?.name}」及其所有错题？`}
+        confirmText="删除"
+        danger
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useUIStore } from '@/stores/ui.store';
 import { journalService } from '@/services/journal.service';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { JournalEntry } from '@/models';
 import { CATEGORY_ICONS, JOURNAL_CATEGORIES } from '@/models/journal';
 
@@ -50,10 +51,13 @@ export function JournalPage() {
     return ordered;
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('删除这条日记？')) return;
-    await journalService.remove(id);
+  const [deleteTarget, setDeleteTarget] = useState<JournalEntry | null>(null);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    await journalService.remove(deleteTarget.id);
     toast('已删除', 'success');
+    setDeleteTarget(null);
     load();
   };
 
@@ -113,7 +117,7 @@ export function JournalPage() {
                           <div className="flex justify-end gap-1 mt-1.5">
                             <button onClick={() => navigate(`/journal/edit/${e.id}`)}
                               className="w-6 h-6 rounded-full bg-blue-50 text-blue-400 flex items-center justify-center text-xs">✎</button>
-                            <button onClick={() => handleDelete(e.id)}
+                            <button onClick={() => setDeleteTarget(e)}
                               className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center text-xs">🗑</button>
                           </div>
                         </div>
@@ -128,6 +132,16 @@ export function JournalPage() {
       )}
 
       <Button className="w-full" onClick={() => navigate('/journal/new')}>+ 写日记</Button>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="确认删除"
+        message="删除这条日记？"
+        confirmText="删除"
+        danger
+      />
     </div>
   );
 }

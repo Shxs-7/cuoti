@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode, TouchEvent } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -19,22 +19,11 @@ const sizeClasses: Record<string, string> = {
   lg: 'px-6 py-3 text-lg rounded-xl',
 };
 
-export function Button({ variant = 'primary', size = 'md', className = '', children, onClick, ...props }: Props) {
-  const handleTouch = (e: TouchEvent<HTMLButtonElement>) => {
-    // Prevent the default touch behavior (scrolling, zooming)
-    // Then trigger the click handler if it exists
-    if (onClick) {
-      e.preventDefault();
-      onClick(e as unknown as React.MouseEvent<HTMLButtonElement>);
-    }
-  };
-
+export function Button({ variant = 'primary', size = 'md', className = '', children, ...props }: Props) {
   return (
     <button
       type="button"
       className={`font-medium transition-colors duration-150 min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-      onTouchEnd={handleTouch}
-      onClick={onClick}
       {...props}
     >
       {children}

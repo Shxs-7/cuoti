@@ -7,6 +7,7 @@ import { syncService } from '@/services/sync.service';
 import { compressImage } from '@/lib/compression';
 import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
 import { Badge } from '@/components/ui/Badge';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { KnowledgePoint } from '@/models';
 import { formatDateTime } from '@/lib/date';
 
@@ -87,9 +88,10 @@ export function KnowledgeDetailPage() {
     }
   };
 
+  const [showDelete, setShowDelete] = useState(false);
+
   const handleDelete = async () => {
     if (!kpId) return;
-    if (!confirm('删除此知识点？')) return;
     await knowledgeService.remove(kpId);
     toast('已删除', 'success');
     navigate(-1);
@@ -200,11 +202,20 @@ export function KnowledgeDetailPage() {
               onTouchEnd={(e) => { e.preventDefault(); navigate(`/kp/new/${kp.folderId}`); }}
             >+ 新知识点</button>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDelete(true)}
               className="flex-1 py-2.5 text-sm font-medium rounded-lg bg-red-500 text-white active:bg-red-600 min-h-[44px]"
-              onTouchEnd={(e) => { e.preventDefault(); handleDelete(); }}
             >删除</button>
           </div>
+
+          <ConfirmDialog
+            open={showDelete}
+            onClose={() => setShowDelete(false)}
+            onConfirm={handleDelete}
+            title="确认删除"
+            message="删除此知识点？"
+            confirmText="删除"
+            danger
+          />
         </>
       )}
 
