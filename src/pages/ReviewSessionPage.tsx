@@ -16,6 +16,7 @@ export function ReviewSessionPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showPhoto, setShowPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     setTitle('复习中');
@@ -85,7 +86,8 @@ export function ReviewSessionPage() {
         {q.photos.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {q.photos.map((p, idx) => (
-              <img key={idx} src={p} alt="" className="w-20 h-20 object-cover rounded-lg" />
+              <img key={idx} src={p} alt="" onClick={() => setShowPhoto(p)}
+                className="w-20 h-20 object-cover rounded-lg cursor-pointer active:opacity-80" />
             ))}
           </div>
         )}
@@ -135,6 +137,14 @@ export function ReviewSessionPage() {
           </div>
         )}
       </div>
+
+      {showPhoto && (
+        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center" onClick={() => setShowPhoto(null)}>
+          <img src={showPhoto} alt="" className="max-w-full max-h-full object-contain p-4" />
+          <button onClick={() => setShowPhoto(null)}
+            className="absolute top-4 right-4 w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center">✕</button>
+        </div>
+      )}
     </div>
   );
 }

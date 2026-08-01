@@ -11,6 +11,7 @@ export function AIPage() {
   const toast = useUIStore(s => s.toast);
   const [apiKey, setApiKey] = useState(aiService.getApiKey());
   const [apiUrl, setApiUrl] = useState(aiService.getApiUrl());
+  const [apiModel, setApiModel] = useState(aiService.getApiModel());
   const [showSettings, setShowSettings] = useState(false);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,7 @@ export function AIPage() {
   const saveSettings = () => {
     aiService.setApiKey(apiKey.trim());
     aiService.setApiUrl(apiUrl.trim() || aiService.getApiUrl());
+    aiService.setApiModel(apiModel.trim() || aiService.getApiModel());
     toast('设置已保存', 'success');
     setShowSettings(false);
     runAI();
@@ -97,6 +99,12 @@ export function AIPage() {
             <label className="text-xs text-gray-500 mb-1 block">API Key</label>
             <input value={apiKey} onChange={e => setApiKey(e.target.value)} type="password"
               placeholder="sk-..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400" />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">模型名称</label>
+            <input value={apiModel} onChange={e => setApiModel(e.target.value)}
+              placeholder="deepseek-chat（OpenAI 用 gpt-4o-mini 等）"
               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400" />
           </div>
           <Button size="sm" className="w-full" onClick={saveSettings}>保存并分析</Button>
