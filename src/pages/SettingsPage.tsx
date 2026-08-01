@@ -88,6 +88,24 @@ export function SettingsPage() {
     setShowClear(false);
   };
 
+  // 强制刷新：清缓存 + 注销旧 Service Worker + 重载页面，保证拿到最新版本
+  const handleForceRefresh = async () => {
+    toast('正在清除缓存并刷新...', 'info');
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch {
+      // 清缓存失败也不影响强制刷新
+    }
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-4 pb-6">
       {/* App info */}
@@ -98,6 +116,15 @@ export function SettingsPage() {
           <div className="flex justify-between"><span className="text-gray-500">版本</span><span>{APP_VERSION}</span></div>
           <div className="flex justify-between"><span className="text-gray-500">总错题数</span><span className="font-semibold text-primary-600">{totalQuestions}</span></div>
         </div>
+      </div>
+
+      {/* App update */}
+      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+        <h3 className="text-sm font-semibold text-gray-700">🔄 应用更新</h3>
+        <p className="text-xs text-gray-400">如果手机上还是旧版本，点下方按钮强制刷新到最新版（清除本地缓存后重新加载）</p>
+        <Button variant="secondary" size="sm" className="w-full" onClick={handleForceRefresh}>
+          🔄 强制刷新到最新版
+        </Button>
       </div>
 
       {/* Storage */}
