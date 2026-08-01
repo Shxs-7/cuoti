@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS journal (
 CREATE TABLE IF NOT EXISTS deletions (
   id TEXT PRIMARY KEY,             -- `${table}:${recordId}`
   device_id TEXT REFERENCES devices(id) ON DELETE CASCADE,
-  table TEXT NOT NULL,             -- 远程表名，如 questions / reviews
+  table_name TEXT NOT NULL,        -- 远程表名，如 questions / reviews
   record_id TEXT NOT NULL,
   deleted_at TIMESTAMPTZ DEFAULT now()
 );
@@ -152,4 +152,4 @@ CREATE INDEX IF NOT EXISTS idx_questions_device ON questions(device_id, folder_i
 CREATE INDEX IF NOT EXISTS idx_tags_device ON tags(device_id);
 CREATE INDEX IF NOT EXISTS idx_kp_device ON knowledge_points(device_id, folder_id);
 CREATE INDEX IF NOT EXISTS idx_journal_device ON journal(device_id, date);
-CREATE INDEX IF NOT EXISTS idx_deletions_table ON deletions(table, record_id);
+CREATE INDEX IF NOT EXISTS idx_deletions_table ON deletions(table_name, record_id);

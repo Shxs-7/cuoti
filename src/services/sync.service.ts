@@ -23,7 +23,7 @@ const FIELD_MAP: Record<string, string> = {
   masteryLevel: 'mastery_level', nextReviewAt: 'next_review_at',
   consecutiveCorrect: 'consecutive_correct', reviewCount: 'review_count',
   questionCount: 'question_count', knowledgePoints: 'knowledge_points',
-  recordId: 'record_id', deletedAt: 'deleted_at',
+  recordId: 'record_id', deletedAt: 'deleted_at', tableName: 'table_name',
 };
 
 function toSnake(obj: any): any {
@@ -89,7 +89,7 @@ export const syncService = {
         const localName = localKeyOf('deletions');
         for (const row of data as any[]) {
           const clean = toCamel(row);
-          const table = String(clean.table ?? '');
+        const table = String(clean.tableName ?? '');
           const recordId = String(clean.recordId ?? '');
           if (table && recordId) {
             tombstones.set(`${table}:${recordId}`, clean.deletedAt ? new Date(clean.deletedAt).getTime() : Date.now());
@@ -178,10 +178,10 @@ export const syncService = {
   async markDeleted(table: string, recordId: string, deletedAt = Date.now()) {
     try {
       const id = `${table}:${recordId}`;
-      await db.deletions.put({ id, table, recordId, deletedAt });
+      await db.deletions.put({ id, tableName: table, recordId, deletedAt });
       const { error } = await supabase.from('deletions').upsert({
         id,
-        table,
+        table_name: table,
         record_id: recordId,
         deleted_at: new Date(deletedAt).toISOString(),
         device_id: this.deviceId,
