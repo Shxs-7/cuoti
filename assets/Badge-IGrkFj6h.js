@@ -1,0 +1,1 @@
+import{j as n}from"./index-BI_CAsz-.js";function s({text:r,color:e="#3b82f6",onClick:t}){return n.jsx("span",{className:`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${t?"cursor-pointer active:opacity-70":""}`,style:{backgroundColor:e+"1A",color:e},onClick:t,children:r})}export{s as B};
