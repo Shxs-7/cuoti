@@ -126,16 +126,24 @@ ALTER TABLE knowledge_points ENABLE ROW LEVEL SECURITY;
 ALTER TABLE journal ENABLE ROW LEVEL SECURITY;
 ALTER TABLE deletions ENABLE ROW LEVEL SECURITY;
 
--- RLS 策略：通过 anon key + device_id 访问自己设备的数据
-CREATE POLICY "device_access" ON devices FOR ALL USING (true);
-CREATE POLICY "device_access" ON categories FOR ALL USING (true);
-CREATE POLICY "device_access" ON folders FOR ALL USING (true);
-CREATE POLICY "device_access" ON questions FOR ALL USING (true);
-CREATE POLICY "device_access" ON tags FOR ALL USING (true);
-CREATE POLICY "device_access" ON reviews FOR ALL USING (true);
-CREATE POLICY "device_access" ON knowledge_points FOR ALL USING (true);
-CREATE POLICY "device_access" ON journal FOR ALL USING (true);
-CREATE POLICY "device_access" ON deletions FOR ALL USING (true);
+-- RLS 策略：通过 anon key + device_id 访问自己设备的数据（幂等创建，可重复执行）
+DO $$
+DECLARE
+  tbl TEXT;
+BEGIN
+  FOREACH tbl IN ARRAY ARRAY[
+    'devices', 'categories', 'folders', 'questions', 'tags',
+    'reviews', 'knowledge_points', 'journal', 'deletions'
+  ]
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_policies
+      WHERE schemaname = 'public' AND tablename = tbl AND policyname = 'device_access'
+    ) THEN
+      EXECUTE format('CREATE POLICY "device_access" ON %I FOR ALL USING (true)', tbl);
+    END IF;
+  END LOOP;
+END $$;
 
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_categories_device ON categories(device_id);
