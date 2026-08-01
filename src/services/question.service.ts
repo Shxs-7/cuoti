@@ -1,12 +1,17 @@
 import { db } from '@/db/database';
 import { uid } from '@/lib/uid';
 import { createLogger } from '@/lib/logger';
+import { syncService } from './sync.service';
 import { tagService } from './tag.service';
 import type { Question } from '@/models';
 
 const log = createLogger('question.service');
 
 export const questionService = {
+  async getAll(): Promise<Question[]> {
+    return db.questions.reverse().sortBy('createdAt');
+  },
+
   async getByFolder(folderId: string): Promise<Question[]> {
     return db.questions
       .where('folderId').equals(folderId)
@@ -39,6 +44,7 @@ export const questionService = {
       nextReviewAt: null,
       masteryLevel: 0,
       consecutiveCorrect: 0,
+      updatedAt: now,
     });
 
     // sync tags
@@ -47,6 +53,8 @@ export const questionService = {
       await tagService.updateCount(t, 1);
     }
 
+    // push to cloud (best effort)
+    syncService.syncOne('questions', question);
     log.info('Question created', { id: question.id, title: question.title });
     return question;
   },
@@ -66,6 +74,9 @@ export const questionService = {
       await tagService.syncTags(old.tags, data.tags);
     }
 
+    // push to cloud (best effort)
+    const updated = await db.questions.get(id);
+    if (updated) syncService.syncOne('questions', updated);
     log.info('Question updated', { id });
   },
 
@@ -74,17 +85,14 @@ export const questionService = {
     if (!question) return;
 
     await db.transaction('rw', [db.questions, db.tags, db.reviews], async () => {
-      // decrement tag counts
-      for (const t of question.tags) {
-        await tagService.updateCount(t, -1);
-        const tag = await tagService.getByName(t);
-        if (tag && tag.questionCount <= 0) {
-          await db.tags.delete(tag.id);
-        }
-      }
+      await tagService.applyQuestionTags(question.tags, -1);
       await db.reviews.where('questionId').equals(id).delete();
       await db.questions.delete(id);
     });
+
+    // propagate deletion to other devices
+    await syncService.markDeleted('questions', id);
+    await syncService.markDeleted('reviews', id);
     log.info('Question removed', { id });
   },
 

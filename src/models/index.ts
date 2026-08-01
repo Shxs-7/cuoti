@@ -6,6 +6,7 @@ export { DIFFICULTY_LABELS } from './question';
 export type { Tag } from './tag';
 export { TAG_COLORS } from './tag';
 export type { ReviewInfo } from './review';
+export type { Deletion } from './deletion';
 export type { KnowledgePoint } from './knowledge';
 export { KP_COLORS } from './knowledge';
 export type { JournalEntry } from './journal';

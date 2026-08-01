@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { questionService } from '@/services/question.service';
@@ -27,6 +27,8 @@ export function SearchPage() {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seqRef = useRef(0);
 
   useEffect(() => {
     setTitle('搜索');
@@ -34,7 +36,8 @@ export function SearchPage() {
   }, []);
 
   const doSearch = async (q: string, tag: string | null) => {
-    if (!q.trim() && !tag) { setResults([]); return; }
+    const seq = ++seqRef.current;
+    if (!q.trim() && !tag) { setResults([]); setLoading(false); return; }
     setLoading(true);
 
     // Split query into keywords
@@ -42,7 +45,7 @@ export function SearchPage() {
 
     // Get all data
     const [questions, kps] = await Promise.all([
-      questionService.search(q || tag || ''),
+      q.trim() ? questionService.search(q) : questionService.getAll(),
       knowledgeService.getAll(),
     ]);
 
@@ -100,18 +103,21 @@ export function SearchPage() {
       })),
     ];
 
+    if (seq !== seqRef.current) return; // 丢弃过期请求
     setResults(items);
     setLoading(false);
   };
 
   const handleQueryChange = (v: string) => {
     setQuery(v);
-    doSearch(v, activeTag);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => doSearch(v, activeTag), 250);
   };
 
   const handleTagClick = (tag: string) => {
     const newTag = activeTag === tag ? null : tag;
     setActiveTag(newTag);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
     doSearch(query, newTag);
   };
 

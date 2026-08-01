@@ -1,5 +1,6 @@
 import { db } from '@/db/database';
 import { createLogger } from '@/lib/logger';
+import { syncService } from './sync.service';
 import type { ReviewInfo, Question } from '@/models';
 
 const log = createLogger('review.service');
@@ -13,17 +14,24 @@ export const reviewService = {
     const info = await db.reviews.get(questionId);
     if (!info) return;
 
+    const now = Date.now();
     const consecutive = rating === 2 ? info.consecutiveCorrect + 1 : 0;
     const mastery = Math.min(100, Math.max(0,
       info.masteryLevel + (rating === 2 ? 10 : rating === 1 ? 3 : -5)
     ));
+    // 简单间隔：掌握 +3 天，模糊 +1 天，不会则立即再复习
+    const delayMs = rating === 2 ? 3 * 24 * 60 * 60 * 1000 : rating === 1 ? 24 * 60 * 60 * 1000 : 0;
 
     await db.reviews.update(questionId, {
       reviewCount: info.reviewCount + 1,
-      lastReviewedAt: Date.now(),
+      lastReviewedAt: now,
+      nextReviewAt: delayMs > 0 ? now + delayMs : null,
       masteryLevel: mastery,
       consecutiveCorrect: consecutive,
+      updatedAt: now,
     });
+    const updated = await db.reviews.get(questionId);
+    if (updated) syncService.syncOne('reviews', updated);
     log.info('Review recorded', { questionId, rating, mastery });
   },
 
@@ -64,7 +72,7 @@ export const reviewService = {
 
     let result = questions;
     if (filters.tag) {
-      result = questions.filter(q => q.tags.includes(filters.tag!));
+      result = questions.filter(q => Array.isArray(q.tags) && q.tags.includes(filters.tag!));
     }
 
     // shuffle

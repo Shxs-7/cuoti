@@ -1,7 +1,7 @@
 import { db } from '@/db/database';
 import { createLogger } from '@/lib/logger';
 import { APP_VERSION } from '@/lib/constants';
-import type { Category, Folder, Question, Tag, ReviewInfo } from '@/models';
+import type { Category, Folder, Question, Tag, ReviewInfo, KnowledgePoint, JournalEntry, Deletion } from '@/models';
 
 const log = createLogger('backup.service');
 
@@ -14,27 +14,35 @@ export interface BackupFile {
     questions: Question[];
     tags: Tag[];
     reviews: ReviewInfo[];
+    knowledgePoints: KnowledgePoint[];
+    journal: JournalEntry[];
+    deletions: Deletion[];
   };
 }
 
 export const backupService = {
   async exportData(): Promise<BackupFile> {
-    const [categories, folders, questions, tags, reviews] = await Promise.all([
+    const [categories, folders, questions, tags, reviews, knowledgePoints, journal, deletions] = await Promise.all([
       db.categories.toArray(),
       db.folders.toArray(),
       db.questions.toArray(),
       db.tags.toArray(),
       db.reviews.toArray(),
+      db.knowledgePoints.toArray(),
+      db.journal.toArray(),
+      db.deletions.toArray(),
     ]);
     const backup: BackupFile = {
       version: APP_VERSION,
       exportedAt: new Date().toISOString(),
-      data: { categories, folders, questions, tags, reviews },
+      data: { categories, folders, questions, tags, reviews, knowledgePoints, journal, deletions },
     };
     log.info('Backup exported', {
       categories: categories.length,
       folders: folders.length,
       questions: questions.length,
+      knowledgePoints: knowledgePoints.length,
+      journal: journal.length,
     });
     return backup;
   },
@@ -57,7 +65,7 @@ export const backupService = {
     const file = new File([blob], `cuoti-backup-${new Date().toISOString().slice(0, 10)}.json`, {
       type: 'application/json',
     });
-    if (navigator.share) {
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
       await navigator.share({
         title: '错题本备份',
         files: [file],
@@ -88,19 +96,29 @@ export const backupService = {
   },
 
   async restoreData(backup: BackupFile): Promise<void> {
-    await db.transaction('rw', [db.categories, db.folders, db.questions, db.tags, db.reviews], async () => {
-      await db.categories.clear();
-      await db.folders.clear();
-      await db.questions.clear();
-      await db.tags.clear();
-      await db.reviews.clear();
+    await db.transaction(
+      'rw',
+      [db.categories, db.folders, db.questions, db.tags, db.reviews, db.knowledgePoints, db.journal, db.deletions],
+      async () => {
+        await db.categories.clear();
+        await db.folders.clear();
+        await db.questions.clear();
+        await db.tags.clear();
+        await db.reviews.clear();
+        await db.knowledgePoints.clear();
+        await db.journal.clear();
+        await db.deletions.clear();
 
-      await db.categories.bulkAdd(backup.data.categories);
-      await db.folders.bulkAdd(backup.data.folders);
-      await db.questions.bulkAdd(backup.data.questions);
-      await db.tags.bulkAdd(backup.data.tags);
-      await db.reviews.bulkAdd(backup.data.reviews);
-    });
+        await db.categories.bulkAdd(backup.data.categories);
+        await db.folders.bulkAdd(backup.data.folders);
+        await db.questions.bulkAdd(backup.data.questions);
+        await db.tags.bulkAdd(backup.data.tags);
+        await db.reviews.bulkAdd(backup.data.reviews);
+        if (backup.data.knowledgePoints?.length) await db.knowledgePoints.bulkAdd(backup.data.knowledgePoints);
+        if (backup.data.journal?.length) await db.journal.bulkAdd(backup.data.journal);
+        if (backup.data.deletions?.length) await db.deletions.bulkAdd(backup.data.deletions);
+      }
+    );
     log.info('Backup restored', {
       categories: backup.data.categories.length,
       questions: backup.data.questions.length,

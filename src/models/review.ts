@@ -5,4 +5,5 @@ export interface ReviewInfo {
   nextReviewAt: number | null;
   masteryLevel: number; // 0-100
   consecutiveCorrect: number;
+  updatedAt: number;
 }

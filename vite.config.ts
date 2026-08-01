@@ -20,11 +20,12 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        // 使用相对路径，兼容 GitHub Pages 子路径（/cuoti/）部署
+        start_url: './',
+        scope: './',
         icons: [
-          { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
     }),

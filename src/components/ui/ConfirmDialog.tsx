@@ -26,7 +26,13 @@ export function ConfirmDialog({
           <Button
             variant={danger ? 'danger' : 'primary'}
             className="flex-1"
-            onClick={() => { onConfirm(); onClose(); }}
+            onClick={async () => {
+              try {
+                await onConfirm();
+              } finally {
+                onClose();
+              }
+            }}
           >
             {confirmText}
           </Button>

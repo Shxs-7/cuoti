@@ -1,6 +1,7 @@
 import { db } from '@/db/database';
 import { uid } from '@/lib/uid';
 import { createLogger } from '@/lib/logger';
+import { syncService } from './sync.service';
 import type { KnowledgePoint } from '@/models';
 import { KP_COLORS } from '@/models';
 
@@ -38,16 +39,20 @@ export const knowledgeService = {
       updatedAt: now,
     };
     await db.knowledgePoints.add(kp);
+    syncService.syncOne('knowledge_points', kp);
     log.info('KP created', { title: kp.title });
     return kp;
   },
 
   async update(id: string, data: Partial<Pick<KnowledgePoint, 'title' | 'content' | 'photos' | 'tags' | 'rating'>>): Promise<void> {
     await db.knowledgePoints.update(id, { ...data, updatedAt: Date.now() });
+    const updated = await db.knowledgePoints.get(id);
+    if (updated) syncService.syncOne('knowledge_points', updated);
   },
 
   async remove(id: string): Promise<void> {
     await db.knowledgePoints.delete(id);
+    await syncService.markDeleted('knowledge_points', id);
     log.info('KP removed', { id });
   },
 

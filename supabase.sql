@@ -1,4 +1,4 @@
--- 在 Supabase SQL Editor 中执行此文件
+-- 在 Supabase SQL Editor 中执行此文件（可重复执行，幂等）
 
 -- 设备同步 ID 表（用于跨设备同步）
 CREATE TABLE IF NOT EXISTS devices (
@@ -60,14 +60,16 @@ CREATE TABLE IF NOT EXISTS tags (
   UNIQUE(device_id, name)
 );
 
--- 复习记录
+-- 复习记录（主键是 question_id）
 CREATE TABLE IF NOT EXISTS reviews (
   question_id TEXT PRIMARY KEY,
   device_id TEXT REFERENCES devices(id) ON DELETE CASCADE,
   review_count INTEGER DEFAULT 0,
   last_reviewed_at TIMESTAMPTZ,
+  next_review_at TIMESTAMPTZ,
   mastery_level INTEGER DEFAULT 0,
-  consecutive_correct INTEGER DEFAULT 0
+  consecutive_correct INTEGER DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- 知识点
@@ -81,9 +83,37 @@ CREATE TABLE IF NOT EXISTS knowledge_points (
   photos JSONB DEFAULT '[]'::jsonb,
   tags JSONB DEFAULT '[]'::jsonb,
   color TEXT DEFAULT '#0891b2',
+  rating INTEGER DEFAULT 3,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- 学习日记
+CREATE TABLE IF NOT EXISTS journal (
+  id TEXT PRIMARY KEY,
+  device_id TEXT REFERENCES devices(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  category TEXT DEFAULT '',
+  content TEXT DEFAULT '',
+  wrong_reasons TEXT DEFAULT '',
+  tags JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 删除墓碑（同步删除到其他设备）
+CREATE TABLE IF NOT EXISTS deletions (
+  id TEXT PRIMARY KEY,             -- `${table}:${recordId}`
+  device_id TEXT REFERENCES devices(id) ON DELETE CASCADE,
+  table TEXT NOT NULL,             -- 远程表名，如 questions / reviews
+  record_id TEXT NOT NULL,
+  deleted_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 兼容旧库：给已存在的表补列（可重复执行）
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS next_review_at TIMESTAMPTZ;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+ALTER TABLE knowledge_points ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 3;
 
 -- 开启 RLS
 ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
@@ -93,6 +123,8 @@ ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knowledge_points ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journal ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deletions ENABLE ROW LEVEL SECURITY;
 
 -- RLS 策略：通过 anon key + device_id 访问自己设备的数据
 CREATE POLICY "device_access" ON devices FOR ALL USING (true);
@@ -102,6 +134,8 @@ CREATE POLICY "device_access" ON questions FOR ALL USING (true);
 CREATE POLICY "device_access" ON tags FOR ALL USING (true);
 CREATE POLICY "device_access" ON reviews FOR ALL USING (true);
 CREATE POLICY "device_access" ON knowledge_points FOR ALL USING (true);
+CREATE POLICY "device_access" ON journal FOR ALL USING (true);
+CREATE POLICY "device_access" ON deletions FOR ALL USING (true);
 
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_categories_device ON categories(device_id);
@@ -109,3 +143,5 @@ CREATE INDEX IF NOT EXISTS idx_folders_device ON folders(device_id, category_id)
 CREATE INDEX IF NOT EXISTS idx_questions_device ON questions(device_id, folder_id);
 CREATE INDEX IF NOT EXISTS idx_tags_device ON tags(device_id);
 CREATE INDEX IF NOT EXISTS idx_kp_device ON knowledge_points(device_id, folder_id);
+CREATE INDEX IF NOT EXISTS idx_journal_device ON journal(device_id, date);
+CREATE INDEX IF NOT EXISTS idx_deletions_table ON deletions(table, record_id);

@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
+import { db } from '@/db/database';
 import { backupService, type BackupFile } from '@/services/backup.service';
 import { questionService } from '@/services/question.service';
 import { syncService } from '@/services/sync.service';
+import { autoBackupService } from '@/services/autobackup.service';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { APP_NAME, APP_VERSION } from '@/lib/constants';
@@ -20,6 +22,8 @@ export function SettingsPage() {
 
   // Clear confirmation
   const [showClear, setShowClear] = useState(false);
+  const [autoBackupInfo, setAutoBackupInfo] = useState<{ date: string; size: string } | null>(null);
+  const [showRestore, setShowRestore] = useState(false);
 
   useEffect(() => {
     setTitle('设置');
@@ -33,6 +37,7 @@ export function SettingsPage() {
     ]);
     setStorage(s);
     setTotalQuestions(count);
+    setAutoBackupInfo(autoBackupService.getBackupInfo());
   };
 
   const handleExport = async () => {
@@ -60,6 +65,8 @@ export function SettingsPage() {
     if (!pendingImport) return;
     try {
       await backupService.restoreData(pendingImport);
+      // 导入后立即把数据推到云端
+      syncService.fullSync();
       toast('数据恢复成功', 'success');
       loadInfo();
     } catch {
@@ -68,12 +75,16 @@ export function SettingsPage() {
     setPendingImport(null);
   };
 
-  const handleClearAll = () => {
-    const req = indexedDB.deleteDatabase('cuoti-db');
-    req.onsuccess = () => {
+  const handleClearAll = async () => {
+    try {
+      // db.delete() 会关闭连接并删除数据库，比 deleteDatabase 更可靠
+      await db.delete();
+      localStorage.removeItem('cuoti-autobackup');
       toast('所有数据已清空，请刷新页面', 'info');
-      setTimeout(() => window.location.reload(), 1500);
-    };
+      setTimeout(() => window.location.reload(), 1000);
+    } catch {
+      toast('清空失败', 'error');
+    }
     setShowClear(false);
   };
 
@@ -128,6 +139,20 @@ export function SettingsPage() {
         />
       </div>
 
+      {/* Auto backup */}
+      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+        <h3 className="text-sm font-semibold text-gray-700">🛡️ 自动备份</h3>
+        <p className="text-xs text-gray-400">数据变化后自动备份到本地浏览器，每 5 分钟兜底保存一次</p>
+        {autoBackupInfo ? (
+          <div className="text-xs text-gray-500">最近备份：{autoBackupInfo.date}（{autoBackupInfo.size}）</div>
+        ) : (
+          <div className="text-xs text-gray-400">暂无自动备份</div>
+        )}
+        <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowRestore(true)} disabled={!autoBackupInfo}>
+          ♻️ 从自动备份恢复
+        </Button>
+      </div>
+
       {/* Cloud Sync */}
       <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
         <h3 className="text-sm font-semibold text-gray-700">☁️ 云同步</h3>
@@ -148,7 +173,7 @@ export function SettingsPage() {
             toast('设备 ID 已复制', 'success');
           }}>📋 复制设备 ID</Button>
         </div>
-        <p className="text-[10px] text-gray-300">在其他设备上粘贴相同的设备 ID 即可同步数据</p>
+        <p className="text-[10px] text-gray-300">所有设备的数据会自动合并同步，删除操作也会同步到其他设备</p>
       </div>
 
       {/* Danger zone */}
@@ -174,7 +199,7 @@ export function SettingsPage() {
         onConfirm={confirmImport}
         title="确认导入"
         message={pendingImport
-          ? `将导入 ${pendingImport.data.categories.length} 分类, ${pendingImport.data.folders.length} 文件夹, ${pendingImport.data.questions.length} 题目。当前数据将被覆盖，确认？`
+          ? `将导入 ${pendingImport.data.categories.length} 分类, ${pendingImport.data.folders.length} 文件夹, ${pendingImport.data.questions.length} 题目, ${pendingImport.data.knowledgePoints?.length ?? 0} 知识点, ${pendingImport.data.journal?.length ?? 0} 条日记。当前数据将被覆盖，确认？`
           : ''}
         confirmText="导入"
         danger
@@ -188,6 +213,27 @@ export function SettingsPage() {
         title="清空所有数据"
         message="确定要删除所有数据吗？此操作无法恢复！"
         confirmText="清空"
+        danger
+      />
+
+      {/* Restore auto backup confirm */}
+      <ConfirmDialog
+        open={showRestore}
+        onClose={() => setShowRestore(false)}
+        onConfirm={async () => {
+          const ok = await autoBackupService.restore();
+          if (ok) {
+            syncService.fullSync();
+            toast('自动备份已恢复', 'success');
+          } else {
+            toast('恢复失败', 'error');
+          }
+          setShowRestore(false);
+          loadInfo();
+        }}
+        title="从自动备份恢复"
+        message="将用最近一次自动备份覆盖当前所有数据，确认？"
+        confirmText="恢复"
         danger
       />
     </div>

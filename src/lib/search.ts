@@ -10,7 +10,6 @@ export function tokenize(text: string): string[] {
 
   try {
     // Try Intl.Segmenter for proper CJK word segmentation
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const IntlWithSegmenter = Intl as typeof Intl & { Segmenter?: new (locale: string, options: { granularity: string }) => { segment: (text: string) => Iterable<{ isWordLike: boolean; segment: string }> } };
     if (!IntlWithSegmenter.Segmenter) throw new Error('Segmenter not available');
     const segmenter = new IntlWithSegmenter.Segmenter('zh-CN', { granularity: 'word' });

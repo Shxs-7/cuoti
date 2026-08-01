@@ -38,10 +38,9 @@ export function CategoryPage() {
     setTitle(cat.name);
     const flds = await folderService.getByCategory(categoryId);
     setFolders(flds);
+    const counts = await Promise.all(flds.map(f => folderService.getQuestionCount(f.id)));
     const c: Record<string, number> = {};
-    for (const f of flds) {
-      c[f.id] = await folderService.getQuestionCount(f.id);
-    }
+    flds.forEach((f, i) => { c[f.id] = counts[i]; });
     setCounts(c);
   };
 

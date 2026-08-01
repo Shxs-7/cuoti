@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { journalService } from '@/services/journal.service';
 import { JOURNAL_CATEGORIES, CATEGORY_ICONS } from '@/models/journal';
+import { todayStr } from '@/lib/date';
 
 export function AddJournalPage() {
   const { entryId } = useParams<{ entryId: string }>();
@@ -13,7 +14,7 @@ export function AddJournalPage() {
   const navigate = useNavigate();
   const isEdit = !!entryId;
 
-  const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(searchParams.get('date') || todayStr());
   const [category, setCategory] = useState(JOURNAL_CATEGORIES[0]);
   const [content, setContent] = useState('');
   const [wrongReasons, setWrongReasons] = useState('');

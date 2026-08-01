@@ -1,6 +1,7 @@
 import { db } from '@/db/database';
 import { uid } from '@/lib/uid';
 import { createLogger } from '@/lib/logger';
+import { syncService } from './sync.service';
 import type { JournalEntry } from '@/models';
 
 const log = createLogger('journal');
@@ -32,16 +33,20 @@ export const journalService = {
     const now = Date.now();
     const entry: JournalEntry = { id: uid(), ...data, createdAt: now, updatedAt: now };
     await db.journal.add(entry);
+    syncService.syncOne('journal', entry);
     log.info('Journal created', { date: data.date, category: data.category });
     return entry;
   },
 
   async update(id: string, data: Partial<Pick<JournalEntry, 'date' | 'category' | 'content' | 'wrongReasons' | 'tags'>>) {
     await db.journal.update(id, { ...data, updatedAt: Date.now() });
+    const updated = await db.journal.get(id);
+    if (updated) syncService.syncOne('journal', updated);
   },
 
   async remove(id: string): Promise<void> {
     await db.journal.delete(id);
+    await syncService.markDeleted('journal', id);
   },
 
   async getStats() {

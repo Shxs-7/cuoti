@@ -54,6 +54,19 @@ export const tagService = {
     }
   },
 
+  // 批量增减一批错题的标签计数（删除错题/文件夹/分类时使用）
+  async applyQuestionTags(tags: string[], delta: number): Promise<void> {
+    for (const t of tags) {
+      await this.updateCount(t, delta);
+      if (delta < 0) {
+        const tag = await this.getByName(t);
+        if (tag && tag.questionCount <= 0) {
+          await db.tags.delete(tag.id);
+        }
+      }
+    }
+  },
+
   async getQuestionCount(name: string): Promise<number> {
     const tag = await db.tags.where('name').equals(name).first();
     return tag?.questionCount ?? 0;
