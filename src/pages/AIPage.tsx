@@ -11,7 +11,7 @@ export function AIPage() {
   const toast = useUIStore(s => s.toast);
   const [apiKey, setApiKey] = useState(aiService.getApiKey());
   const [apiUrl, setApiUrl] = useState(aiService.getApiUrl());
-  const [showSettings, setShowSettings] = useState(!aiService.isConfigured());
+  const [showSettings, setShowSettings] = useState(false);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [localStats, setLocalStats] = useState({ total: 0, reviewed: 0, avgMastery: 0, needReview: 0, journalCount: 0 });
@@ -19,14 +19,20 @@ export function AIPage() {
   useEffect(() => {
     setTitle('AI 分析');
     loadStats();
+    // 自动执行一次分析
+    runAI();
   }, []);
 
   const loadStats = async () => {
-    const [s, journalEntries] = await Promise.all([
-      reviewService.getStats(),
-      journalService.getAll(),
-    ]);
-    setLocalStats({ ...s, journalCount: journalEntries.length });
+    try {
+      const [s, journalEntries] = await Promise.all([
+        reviewService.getStats(),
+        journalService.getAll(),
+      ]);
+      setLocalStats({ ...s, journalCount: journalEntries.length });
+    } catch {
+      // ignore
+    }
   };
 
   const saveSettings = () => {
@@ -34,6 +40,7 @@ export function AIPage() {
     aiService.setApiUrl(apiUrl.trim() || aiService.getApiUrl());
     toast('设置已保存', 'success');
     setShowSettings(false);
+    runAI();
   };
 
   const runAI = async () => {
@@ -72,15 +79,18 @@ export function AIPage() {
         </div>
       </div>
 
-      {/* Settings */}
+      {/* Settings (collapsed) */}
       {showSettings && (
         <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-          <h3 className="text-sm font-semibold">⚙️ AI 设置</h3>
-          <p className="text-xs text-gray-400">需要 OpenAI 兼容的 API Key（支持 DeepSeek、OpenAI 等）</p>
+          <h3 className="text-sm font-semibold">⚙️ AI 云分析设置（可选）</h3>
+          <p className="text-xs text-gray-400">
+            已内置本地智能分析，无需配置即可使用。
+            如需更深入的 AI 分析，可填 OpenAI/DeepSeek 兼容 API。
+          </p>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">API 地址</label>
             <input value={apiUrl} onChange={e => setApiUrl(e.target.value)}
-              placeholder="https://api.openai.com/v1/chat/completions"
+              placeholder="https://api.deepseek.com/v1/chat/completions"
               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400" />
           </div>
           <div>
@@ -89,14 +99,14 @@ export function AIPage() {
               placeholder="sk-..."
               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400" />
           </div>
-          <Button size="sm" className="w-full" onClick={saveSettings}>保存设置</Button>
+          <Button size="sm" className="w-full" onClick={saveSettings}>保存并分析</Button>
         </div>
       )}
 
-      {/* Run AI */}
+      {/* Actions */}
       <div className="flex gap-2">
         <Button className="flex-1" onClick={runAI} disabled={loading}>
-          {loading ? '分析中...' : '🤖 AI 分析'}
+          {loading ? '分析中...' : '🔄 重新分析'}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowSettings(!showSettings)}>
           ⚙️
@@ -107,13 +117,13 @@ export function AIPage() {
       {loading && (
         <div className="text-center py-8 text-gray-400">
           <div className="text-3xl mb-2">🤖</div>
-          <div className="text-sm">AI 正在分析你的学习数据...</div>
+          <div className="text-sm">正在分析你的学习数据...</div>
         </div>
       )}
 
-      {result && (
+      {result && !loading && (
         <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">📊 AI 分析结果</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">📊 分析结果</h3>
           <div className="text-sm whitespace-pre-wrap leading-relaxed">{result}</div>
         </div>
       )}
