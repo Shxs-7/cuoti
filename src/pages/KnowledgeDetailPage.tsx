@@ -8,6 +8,7 @@ import { compressImage } from '@/lib/compression';
 import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { StarRating } from '@/components/ui/StarRating';
 import type { KnowledgePoint } from '@/models';
 import { formatDateTime } from '@/lib/date';
 
@@ -25,6 +26,7 @@ export function KnowledgeDetailPage() {
   const [eContent, setEContent] = useState('');
   const [ePhotos, setEPhotos] = useState<string[]>([]);
   const [eTags, setETags] = useState('');
+  const [eRating, setERating] = useState(3);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export function KnowledgeDetailPage() {
     setEContent(kp.content);
     setEPhotos([...kp.photos]);
     setETags(kp.tags.join('，'));
+    setERating(kp.rating || 3);
     setEditing(true);
   };
 
@@ -73,6 +76,7 @@ export function KnowledgeDetailPage() {
         content: eContent,
         photos: ePhotos,
         tags: eTags.split(/[,，\s]+/).filter(Boolean),
+        rating: eRating,
       };
       await knowledgeService.update(kpId, updateData);
       // Also push to cloud immediately
@@ -142,6 +146,13 @@ export function KnowledgeDetailPage() {
                 placeholder="多个标签用逗号分隔" />
             </div>
 
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">重要程度</label>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <StarRating value={eRating} onChange={setERating} size="md" />
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <button type="button"
                 className="flex-1 py-2.5 text-sm font-medium rounded-lg bg-gray-200 text-gray-700 active:bg-gray-300 min-h-[44px]"
@@ -166,9 +177,14 @@ export function KnowledgeDetailPage() {
                 </div>
                 <h2 className="text-lg font-semibold">{kp.title || '无标题'}</h2>
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <StarRating value={kp.rating || 3} size="md" />
                   <span className="text-xs text-gray-400">{formatDateTime(kp.createdAt)}</span>
-                  {kp.tags.map(t => <Badge key={t} text={t} />)}
                 </div>
+                {Array.isArray(kp.tags) && kp.tags.length > 0 && (
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {kp.tags.map((t: string) => <Badge key={t} text={t} />)}
+                  </div>
+                )}
               </div>
               <button onClick={startEdit}
                 className="ml-2 w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-sm active:bg-blue-100"

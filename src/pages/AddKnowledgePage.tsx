@@ -6,6 +6,7 @@ import { knowledgeService } from '@/services/knowledge.service';
 import { folderService } from '@/services/folder.service';
 import { compressImage } from '@/lib/compression';
 import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
+import { StarRating } from '@/components/ui/StarRating';
 import type { Folder } from '@/models';
 
 export function AddKnowledgePage() {
@@ -19,6 +20,7 @@ export function AddKnowledgePage() {
   const [content, setContent] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [tags, setTags] = useState('');
+  const [rating, setRating] = useState(3);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +58,7 @@ export function AddKnowledgePage() {
         content,
         photos,
         tags: tags.split(/[,，\s]+/).filter(Boolean),
+        rating,
       });
       toast('添加成功', 'success');
       navigate(`/knowledge/${kp.id}`, { replace: true });
@@ -75,6 +78,16 @@ export function AddKnowledgePage() {
         <input value={title} onChange={e => setTitle_(e.target.value)}
           className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-base outline-none focus:border-primary-400"
           placeholder="例如：增长率计算公式" autoFocus />
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-500 mb-1 block">重要程度</label>
+        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+          <StarRating value={rating} onChange={setRating} size="md" />
+          <span className="text-xs text-gray-400">
+            {rating === 5 ? '非常重要' : rating === 4 ? '重要' : rating === 3 ? '一般' : rating <= 2 ? '了解即可' : ''}
+          </span>
+        </div>
       </div>
 
       <div>

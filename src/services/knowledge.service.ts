@@ -26,11 +26,13 @@ export const knowledgeService = {
     content: string;
     photos: string[];
     tags: string[];
+    rating?: number;
   }): Promise<KnowledgePoint> {
     const now = Date.now();
     const kp: KnowledgePoint = {
       id: uid(),
       ...data,
+      rating: data.rating ?? 3,
       color: KP_COLORS[Math.floor(Math.random() * KP_COLORS.length)],
       createdAt: now,
       updatedAt: now,
@@ -40,7 +42,7 @@ export const knowledgeService = {
     return kp;
   },
 
-  async update(id: string, data: Partial<Pick<KnowledgePoint, 'title' | 'content' | 'photos' | 'tags'>>): Promise<void> {
+  async update(id: string, data: Partial<Pick<KnowledgePoint, 'title' | 'content' | 'photos' | 'tags' | 'rating'>>): Promise<void> {
     await db.knowledgePoints.update(id, { ...data, updatedAt: Date.now() });
   },
 

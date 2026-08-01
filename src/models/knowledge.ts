@@ -7,6 +7,7 @@ export interface KnowledgePoint {
   photos: string[];
   tags: string[];
   color: string;
+  rating: number; // 1-5 星，重要程度
   createdAt: number;
   updatedAt: number;
 }

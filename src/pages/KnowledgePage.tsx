@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { knowledgeService } from '@/services/knowledge.service';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { StarRating } from '@/components/ui/StarRating';
 import type { KnowledgePoint } from '@/models';
 import { formatDate } from '@/lib/date';
 
@@ -35,6 +36,7 @@ export function KnowledgePage() {
                   <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{kp.content}</div>
                 )}
                 <div className="flex items-center gap-1.5 mt-1.5">
+                  <StarRating value={kp.rating || 3} />
                   <span className="text-xs text-gray-400">{formatDate(kp.createdAt)}</span>
                   {kp.tags.map(t => (
                     <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-600">{t}</span>

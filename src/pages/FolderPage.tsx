@@ -8,6 +8,7 @@ import { knowledgeService } from '@/services/knowledge.service';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { StarRating } from '@/components/ui/StarRating';
 import type { Folder, Question, KnowledgePoint } from '@/models';
 import { formatDate } from '@/lib/date';
 import { DIFFICULTY_LABELS } from '@/models/question';
@@ -86,6 +87,7 @@ export function FolderPage() {
                       <div className="text-xs text-cyan-600/70 mt-0.5 line-clamp-1">{kp.content}</div>
                     )}
                     <div className="flex items-center gap-1.5 mt-1.5">
+                      <StarRating value={kp.rating || 3} />
                       <span className="text-xs text-cyan-400">{formatDate(kp.createdAt)}</span>
                       {kp.tags.map(t => (
                         <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-600">{t}</span>
