@@ -15,6 +15,9 @@ export function AIPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [question, setQuestion] = useState('');
+  const [qaResult, setQaResult] = useState('');
+  const [asking, setAsking] = useState(false);
   const [localStats, setLocalStats] = useState({ total: 0, reviewed: 0, avgMastery: 0, needReview: 0, journalCount: 0 });
 
   useEffect(() => {
@@ -56,6 +59,25 @@ export function AIPage() {
       setResult('分析失败: ' + (e instanceof Error ? e.message : ''));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const askAI = async () => {
+    const q = question.trim();
+    if (!q || asking) return;
+    if (!aiService.isConfigured()) {
+      setQaResult('⚠️ 提问需要先配置云端 AI（点右上 ⚙️ 填 API 地址、Key 和模型）。不配置也能使用上方的自动分析。');
+      return;
+    }
+    setAsking(true);
+    setQaResult('');
+    try {
+      const answer = await aiService.ask(q);
+      setQaResult(answer);
+    } catch (e) {
+      setQaResult('提问失败：' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setAsking(false);
     }
   };
 
@@ -135,6 +157,27 @@ export function AIPage() {
           <div className="text-sm whitespace-pre-wrap leading-relaxed">{result}</div>
         </div>
       )}
+
+      {/* AI 提问 */}
+      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+        <h3 className="text-sm font-semibold text-gray-700">💬 向 AI 提问</h3>
+        <textarea
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
+          rows={2}
+          className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400 resize-y"
+          placeholder="例如：我最近资料分析总是算错，应该怎么练？"
+        />
+        <Button size="sm" className="w-full" onClick={askAI} disabled={asking || !question.trim()}>
+          {asking ? '思考中...' : '发送问题'}
+        </Button>
+        {!aiService.isConfigured() && (
+          <p className="text-xs text-gray-400">未配置云端 AI 时，上方"自动分析"为本地智能分析，可直接使用。</p>
+        )}
+        {qaResult && (
+          <div className="text-sm whitespace-pre-wrap leading-relaxed bg-gray-50 rounded-xl p-3">{qaResult}</div>
+        )}
+      </div>
     </div>
   );
 }

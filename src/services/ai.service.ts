@@ -13,6 +13,36 @@ const API_URL_STORAGE = 'cuoti-ai-url';
 const API_MODEL_STORAGE = 'cuoti-ai-model';
 const DEFAULT_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 const DEFAULT_MODEL = 'deepseek-chat';
+const AI_TIMEOUT = 25000; // 25s 超时，超时自动回退本地分析
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = AI_TIMEOUT): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// 组装发送给云端 AI 的学习数据上下文（最近错题 + 日记错因）
+async function buildAIContext(): Promise<string> {
+  const [journalEntries, questions, kps] = await Promise.all([
+    journalService.getAll(),
+    questionService.getRecent(20),
+    knowledgeService.getAll(),
+  ]);
+  const questionText = questions.map(q =>
+    `- 【${q.title || '无标题'}】难度${q.difficulty}/5 标签：${Array.isArray(q.tags) ? q.tags.join('、') : '无'}，我的错误答案：${q.wrongAnswer || '未记录'}`
+  ).join('\n') || '暂无错题';
+  const errorText = journalEntries
+    .filter(j => j.wrongReasons)
+    .slice(-15)
+    .map(j => `- 【${j.date} ${j.category}】${j.wrongReasons}`)
+    .join('\n') || '暂无错因记录';
+  const kpText = kps.slice(0, 15).map(k => `- ${k.title}`).join('\n') || '暂无知识点';
+  return `## 最近错题（${questions.length} 道）\n${questionText}\n\n## 日记错因（${journalEntries.length} 条）\n${errorText}\n\n## 已记录知识点\n${kpText}`;
+}
 
 // 从日记错因里统计高频片段（按标点切分，找出反复出现的错误描述）
 function frequentErrorFragments(entries: JournalEntry[]): { text: string; count: number }[] {
@@ -128,7 +158,7 @@ ${kpText}
 
 用中文，简洁有条理，分点回答。`;
 
-      const res = await fetch(this.getApiUrl(), {
+      const res = await fetchWithTimeout(this.getApiUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
@@ -150,7 +180,40 @@ ${kpText}
       return content ? content : local;
     } catch (e) {
       log.warn('AI request failed', e);
-      return local + '\n\n⚠️ 网络错误，无法连接 AI，以上为本地分析结果。';
+      return local + '\n\n⚠️ AI 云分析超时或网络错误，以上为本地分析结果。';
+    }
+  },
+
+  // 直接向云端 AI 提问（需配置 Key）
+  async ask(question: string): Promise<string> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) throw new Error('请先在 ⚙️ 里配置 API Key');
+    try {
+      const context = await buildAIContext();
+      const prompt = `你是公务员考试辅导专家。以下是用户的学习数据摘要：\n\n${context}\n\n用户的问题：${question}\n\n请结合这些数据给出具体、可操作的回答，用中文，分点，简洁。`;
+      const res = await fetchWithTimeout(this.getApiUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: this.getApiModel(),
+          messages: [
+            { role: 'system', content: '你是公考辅导专家，回答简洁有条理，用中文。' },
+            { role: 'user', content: prompt },
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error('AI 接口错误：' + (await res.text()).slice(0, 200));
+      }
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) throw new Error('AI 返回内容为空');
+      return content;
+    } catch (e) {
+      log.warn('AI ask failed', e);
+      throw new Error(e instanceof Error ? e.message : '请求失败');
     }
   },
 
