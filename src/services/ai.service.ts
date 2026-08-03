@@ -25,6 +25,13 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = A
   }
 }
 
+// 把请求失败转成用户能看懂的原因
+function describeFetchError(e: unknown): string {
+  if (e instanceof DOMException && e.name === 'AbortError') return '请求超时（15 秒），接口可能不可达';
+  if (e instanceof TypeError) return '无法连接该接口：网络不通，或该接口不允许浏览器跨域调用（CORS 限制）';
+  return e instanceof Error ? e.message : String(e);
+}
+
 // 组装发送给云端 AI 的学习数据上下文（最近错题 + 日记错因）
 async function buildAIContext(): Promise<string> {
   const [journalEntries, questions, kps] = await Promise.all([
@@ -172,15 +179,16 @@ ${kpText}
         }),
       });
       if (!res.ok) {
-        log.warn('AI API error: ' + await res.text());
-        return local + '\n\n⚠️ AI 云分析失败（检查 Key/地址/模型），以上为本地分析结果。';
+        const body = (await res.text()).slice(0, 200);
+        log.warn('AI API error: ' + body);
+        return local + `\n\n⚠️ AI 云分析失败：HTTP ${res.status} ${body}\n请检查 API 地址、Key、模型名称是否匹配。以上为本地分析结果。`;
       }
       const data = await res.json();
       const content = data.choices?.[0]?.message?.content;
       return content ? content : local;
     } catch (e) {
       log.warn('AI request failed', e);
-      return local + '\n\n⚠️ AI 云分析超时或网络错误，以上为本地分析结果。';
+      return local + `\n\n⚠️ AI 云分析失败：${describeFetchError(e)}\n以上为本地分析结果。`;
     }
   },
 
@@ -205,7 +213,7 @@ ${kpText}
         }),
       });
       if (!res.ok) {
-        throw new Error('AI 接口错误：' + (await res.text()).slice(0, 200));
+        throw new Error('AI 接口错误：HTTP ' + res.status + ' ' + (await res.text()).slice(0, 200));
       }
       const data = await res.json();
       const content = data.choices?.[0]?.message?.content;
@@ -213,7 +221,29 @@ ${kpText}
       return content;
     } catch (e) {
       log.warn('AI ask failed', e);
-      throw new Error(e instanceof Error ? e.message : '请求失败');
+      throw new Error(e instanceof Error ? e.message : describeFetchError(e));
+    }
+  },
+
+  // 测试云端 AI 连接：返回具体原因
+  async testConnection(): Promise<{ ok: boolean; message: string }> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) return { ok: false, message: '还没有填写 API Key' };
+    try {
+      const res = await fetchWithTimeout(this.getApiUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: this.getApiModel(),
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 8,
+        }),
+      });
+      if (res.ok) return { ok: true, message: '连接成功 ✅' };
+      const body = await res.text();
+      return { ok: false, message: `HTTP ${res.status}：${body.slice(0, 200)}` };
+    } catch (e) {
+      return { ok: false, message: describeFetchError(e) };
     }
   },
 

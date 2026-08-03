@@ -18,6 +18,7 @@ export function AIPage() {
   const [question, setQuestion] = useState('');
   const [qaResult, setQaResult] = useState('');
   const [asking, setAsking] = useState(false);
+  const [testResult, setTestResult] = useState('');
   const [localStats, setLocalStats] = useState({ total: 0, reviewed: 0, avgMastery: 0, needReview: 0, journalCount: 0 });
 
   useEffect(() => {
@@ -81,6 +82,12 @@ export function AIPage() {
     }
   };
 
+  const testConnection = async () => {
+    setTestResult('测试中...');
+    const r = await aiService.testConnection();
+    setTestResult((r.ok ? '✅ ' : '❌ ') + r.message);
+  };
+
   return (
     <div className="space-y-4 pb-6">
       {/* Stats */}
@@ -129,6 +136,14 @@ export function AIPage() {
               placeholder="deepseek-chat（OpenAI 用 gpt-4o-mini 等）"
               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400" />
           </div>
+          <Button size="sm" variant="secondary" className="w-full" onClick={testConnection}>
+            🔌 测试连接
+          </Button>
+          {testResult && (
+            <p className={`text-xs whitespace-pre-wrap break-all ${testResult.startsWith('✅') ? 'text-green-600' : 'text-red-500'}`}>
+              {testResult}
+            </p>
+          )}
           <Button size="sm" className="w-full" onClick={saveSettings}>保存并分析</Button>
         </div>
       )}
