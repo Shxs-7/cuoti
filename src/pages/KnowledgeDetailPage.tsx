@@ -101,6 +101,13 @@ export function KnowledgeDetailPage() {
     navigate(-1);
   };
 
+  const togglePin = async () => {
+    if (!kp) return;
+    await knowledgeService.setPinned(kp.id, !kp.pinnedAt);
+    toast(kp.pinnedAt ? '已取消置顶' : '已置顶', 'success');
+    load();
+  };
+
   if (!kp) return null;
 
   return (
@@ -179,6 +186,9 @@ export function KnowledgeDetailPage() {
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <StarRating value={kp.rating || 3} size="md" />
                   <span className="text-xs text-gray-400">{formatDateTime(kp.createdAt)}</span>
+                  {kp.pinnedAt && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-50 text-amber-500">📌 已置顶</span>
+                  )}
                 </div>
                 {Array.isArray(kp.tags) && kp.tags.length > 0 && (
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -186,9 +196,16 @@ export function KnowledgeDetailPage() {
                   </div>
                 )}
               </div>
-              <button onClick={startEdit}
-                className="ml-2 w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-sm active:bg-blue-100"
-              >✎</button>
+              <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                <button
+                  onClick={togglePin}
+                  title={kp.pinnedAt ? '取消置顶' : '置顶'}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${kp.pinnedAt ? 'bg-amber-50 text-amber-500' : 'bg-gray-100 text-gray-400'}`}
+                >📌</button>
+                <button onClick={startEdit}
+                  className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-sm active:bg-blue-100"
+                >✎</button>
+              </div>
             </div>
           </div>
 

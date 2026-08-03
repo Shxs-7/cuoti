@@ -24,12 +24,21 @@ const FIELD_MAP: Record<string, string> = {
   consecutiveCorrect: 'consecutive_correct', reviewCount: 'review_count',
   questionCount: 'question_count', knowledgePoints: 'knowledge_points',
   recordId: 'record_id', deletedAt: 'deleted_at', tableName: 'table_name',
+  pinnedAt: 'pinned_at',
 };
+
+// 时间戳字段：推送时转 ISO 字符串，拉取时转毫秒时间戳
+const TIMESTAMP_FIELDS = ['createdAt', 'updatedAt', 'lastReviewedAt', 'nextReviewAt', 'deletedAt', 'pinnedAt'];
 
 function toSnake(obj: any): any {
   const out: any = {};
   for (const [k, v] of Object.entries(obj)) {
-    out[FIELD_MAP[k] || k] = v;
+    const key = FIELD_MAP[k] || k;
+    if (TIMESTAMP_FIELDS.includes(k) && typeof v === 'number') {
+      out[key] = new Date(v).toISOString();
+    } else {
+      out[key] = v;
+    }
   }
   return out;
 }
@@ -39,7 +48,13 @@ function toCamel(obj: any): any {
   for (const [k, v] of Object.entries(FIELD_MAP)) rev[v] = k;
   const out: any = {};
   for (const [k, v] of Object.entries(obj)) {
-    out[rev[k] || k] = v;
+    const key = rev[k] || k;
+    if (TIMESTAMP_FIELDS.includes(key) && typeof v === 'string' && v) {
+      const t = new Date(v).getTime();
+      out[key] = Number.isNaN(t) ? v : t;
+    } else {
+      out[key] = v;
+    }
   }
   return out;
 }

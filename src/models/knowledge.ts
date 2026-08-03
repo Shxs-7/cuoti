@@ -8,6 +8,7 @@ export interface KnowledgePoint {
   tags: string[];
   color: string;
   rating: number; // 1-5 星，重要程度
+  pinnedAt: number | null; // 置顶时间戳，null 表示未置顶
   createdAt: number;
   updatedAt: number;
 }

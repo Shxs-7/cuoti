@@ -59,6 +59,11 @@ export function FolderPage() {
     loadData();
   };
 
+  const togglePinKp = async (kp: KnowledgePoint) => {
+    await knowledgeService.setPinned(kp.id, !kp.pinnedAt);
+    loadData();
+  };
+
   if (!folder) return null;
 
   return (
@@ -82,7 +87,10 @@ export function FolderPage() {
                 <div className="flex items-start gap-2">
                   <span className="text-lg mt-0.5">📖</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-cyan-800">{kp.title || '无标题'}</div>
+                    <div className="font-medium text-sm text-cyan-800">
+                      {kp.pinnedAt && <span className="text-amber-500 text-xs mr-1">📌</span>}
+                      {kp.title || '无标题'}
+                    </div>
                     {kp.content && (
                       <div className="text-xs text-cyan-600/70 mt-0.5 line-clamp-1">{kp.content}</div>
                     )}
@@ -97,7 +105,14 @@ export function FolderPage() {
                       )}
                     </div>
                   </div>
-                  <span className="text-cyan-300 text-sm mt-0.5">›</span>
+                  <div className="flex flex-col items-center gap-0.5 mt-0.5 flex-shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); togglePinKp(kp); }}
+                      title={kp.pinnedAt ? '取消置顶' : '置顶'}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${kp.pinnedAt ? 'bg-amber-50 text-amber-500' : 'bg-white/60 text-gray-400'}`}
+                    >📌</button>
+                    <span className="text-cyan-300 text-sm">›</span>
+                  </div>
                 </div>
               </button>
             ))}

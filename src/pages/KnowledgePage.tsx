@@ -17,6 +17,12 @@ export function KnowledgePage() {
     knowledgeService.getAll().then(setKps);
   }, []);
 
+  const togglePin = async (kp: KnowledgePoint) => {
+    await knowledgeService.setPinned(kp.id, !kp.pinnedAt);
+    const next = await knowledgeService.getAll();
+    setKps(next);
+  };
+
   return (
     <div className="space-y-3 pb-4">
       {kps.length === 0 ? (
@@ -31,7 +37,10 @@ export function KnowledgePage() {
             <div className="flex items-start gap-2">
               <span className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: kp.color }} />
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm">{kp.title || '无标题'}</div>
+                <div className="font-medium text-sm">
+                  {kp.pinnedAt && <span className="text-amber-500 text-xs mr-1">📌</span>}
+                  {kp.title || '无标题'}
+                </div>
                 {kp.content && (
                   <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">{kp.content}</div>
                 )}
@@ -46,7 +55,14 @@ export function KnowledgePage() {
                   )}
                 </div>
               </div>
-              <span className="text-gray-300 text-sm mt-1">›</span>
+              <div className="flex flex-col items-center gap-0.5 mt-0.5 flex-shrink-0">
+                <button
+                  onClick={(e) => { e.stopPropagation(); togglePin(kp); }}
+                  title={kp.pinnedAt ? '取消置顶' : '置顶'}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${kp.pinnedAt ? 'bg-amber-50 text-amber-500' : 'bg-gray-50 text-gray-400'}`}
+                >📌</button>
+                <span className="text-gray-300 text-sm">›</span>
+              </div>
             </div>
           </button>
         ))
