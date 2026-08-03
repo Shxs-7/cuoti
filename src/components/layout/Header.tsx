@@ -23,16 +23,23 @@ export function Header() {
           </button>
         )}
         <h1 className="text-lg font-semibold truncate flex-1">{title}</h1>
-        {isRoot ? (
+        <div className="flex items-center gap-1">
+          {isRoot && (
+            <button
+              onClick={() => navigate('/search')}
+              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-full"
+            >
+              🔍
+            </button>
+          )}
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => navigate('/settings')}
+            title="设置"
             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-full"
           >
-            🔍
+            ⚙️
           </button>
-        ) : !canGoBack ? null : (
-          <div className="w-8" />
-        )}
+        </div>
       </div>
     </header>
   );

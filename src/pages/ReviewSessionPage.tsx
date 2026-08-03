@@ -103,6 +103,17 @@ export function ReviewSessionPage() {
           </Button>
         ) : (
           <div className="space-y-3 mt-4 pt-4 border-t border-gray-100">
+            {q.photos.length > 0 && (
+              <div>
+                <div className="text-xs text-gray-500 mb-2">📷 全部图片（{q.photos.length} 张）</div>
+                <div className="flex flex-wrap gap-2">
+                  {q.photos.map((p, idx) => (
+                    <img key={idx} src={p} alt="" onClick={() => setShowPhoto(p)}
+                      className="w-20 h-20 object-cover rounded-lg cursor-pointer active:opacity-80" />
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="bg-green-50 rounded-xl p-3">
               <div className="text-xs text-green-700 font-medium mb-1">正确答案</div>
               <div className="text-sm whitespace-pre-wrap">{q.answer || '未填写'}</div>

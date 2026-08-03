@@ -13,7 +13,7 @@ const API_URL_STORAGE = 'cuoti-ai-url';
 const API_MODEL_STORAGE = 'cuoti-ai-model';
 const DEFAULT_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 const DEFAULT_MODEL = 'deepseek-chat';
-const AI_TIMEOUT = 25000; // 25s 超时，超时自动回退本地分析
+const AI_TIMEOUT = 15000; // 15s 超时，超时自动回退本地分析
 
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = AI_TIMEOUT): Promise<Response> {
   const controller = new AbortController();
@@ -317,7 +317,7 @@ ${kpText}
       return lines.join('\n');
     } catch (e) {
       log.warn('localSummary error', e);
-      return '📊 分析数据失败，请稍后重试。';
+      return '📊 分析数据失败：' + (e instanceof Error ? e.message : String(e));
     }
   },
 };

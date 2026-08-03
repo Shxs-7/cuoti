@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
-import { useUIStore } from '@/stores/ui.store';
 import { folderService } from '@/services/folder.service';
 import { questionService } from '@/services/question.service';
 import { knowledgeService } from '@/services/knowledge.service';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StarRating } from '@/components/ui/StarRating';
 import type { Folder, Question, KnowledgePoint } from '@/models';
 import { formatDate } from '@/lib/date';
@@ -16,13 +14,10 @@ import { DIFFICULTY_LABELS } from '@/models/question';
 export function FolderPage() {
   const { folderId } = useParams<{ folderId: string }>();
   const { setTitle } = useAppStore();
-  const toast = useUIStore(s => s.toast);
   const navigate = useNavigate();
   const [folder, setFolder] = useState<Folder | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [kps, setKps] = useState<KnowledgePoint[]>([]);
-  const [deleteQ, setDeleteQ] = useState<string | null>(null);
-  const [deleteKp, setDeleteKp] = useState<string | null>(null);
 
   useEffect(() => {
     if (!folderId) return;
@@ -41,22 +36,6 @@ export function FolderPage() {
     ]);
     setQuestions(qs);
     setKps(ks);
-  };
-
-  const handleDeleteQ = async () => {
-    if (!deleteQ) return;
-    await questionService.remove(deleteQ);
-    toast('已删除', 'success');
-    setDeleteQ(null);
-    loadData();
-  };
-
-  const handleDeleteKp = async () => {
-    if (!deleteKp) return;
-    await knowledgeService.remove(deleteKp);
-    toast('已删除', 'success');
-    setDeleteKp(null);
-    loadData();
   };
 
   const togglePinKp = async (kp: KnowledgePoint) => {
@@ -171,24 +150,6 @@ export function FolderPage() {
         </Button>
       </div>
 
-      <ConfirmDialog
-        open={!!deleteQ}
-        onClose={() => setDeleteQ(null)}
-        onConfirm={handleDeleteQ}
-        title="确认删除"
-        message="删除后将无法恢复"
-        confirmText="删除"
-        danger
-      />
-      <ConfirmDialog
-        open={!!deleteKp}
-        onClose={() => setDeleteKp(null)}
-        onConfirm={handleDeleteKp}
-        title="确认删除"
-        message="删除后将无法恢复"
-        confirmText="删除"
-        danger
-      />
     </div>
   );
 }
