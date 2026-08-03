@@ -94,6 +94,11 @@ export function CategoryPage() {
       .finally(() => setSaving(false));
   };
 
+  const togglePinFolder = async (f: Folder) => {
+    await folderService.setPinned(f.id, !f.pinnedAt);
+    loadData();
+  };
+
   if (!category) return null;
 
   return (
@@ -108,16 +113,31 @@ export function CategoryPage() {
 
       <div className="space-y-2">
         {folders.map(f => (
-          <div key={f.id} className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
+          <div
+            key={f.id}
+            className={`rounded-xl p-4 shadow-sm flex items-center justify-between ${
+              f.pinnedAt ? 'bg-amber-50 border border-amber-200' : 'bg-white'
+            }`}
+          >
             <button
               onClick={() => navigate(`/folder/${f.id}`)}
               className="flex-1 text-left active:bg-gray-50 -m-2 p-2 rounded-lg"
             >
-              <div className="font-medium text-sm">{f.name}</div>
+              <div className={`font-medium text-sm ${f.pinnedAt ? 'text-amber-700' : ''}`}>
+                {f.pinnedAt && <span className="text-amber-500 text-xs mr-1">📌</span>}
+                {f.name}
+              </div>
               {f.description && <div className="text-xs text-gray-400 mt-0.5">{f.description}</div>}
             </button>
             <div className="flex items-center gap-1 ml-2">
               <span className="text-xs text-gray-400">{counts[f.id] ?? 0} 题</span>
+              <button
+                onClick={() => togglePinFolder(f)}
+                title={f.pinnedAt ? '取消置顶' : '置顶'}
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${
+                  f.pinnedAt ? 'bg-amber-100 text-amber-500' : 'bg-gray-50 text-gray-400'
+                }`}
+              >📌</button>
               <button
                 onClick={() => openEdit(f)}
                 className="w-7 h-7 rounded-full bg-blue-50 text-blue-400 flex items-center justify-center text-xs active:bg-blue-100"

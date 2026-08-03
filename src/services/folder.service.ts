@@ -9,7 +9,9 @@ const log = createLogger('folder.service');
 
 export const folderService = {
   async getByCategory(categoryId: string): Promise<Folder[]> {
-    return db.folders.where('categoryId').equals(categoryId).sortBy('sortOrder');
+    // 置顶的排最前（按置顶时间倒序），其余保持原排序
+    const list = await db.folders.where('categoryId').equals(categoryId).sortBy('sortOrder');
+    return [...list].sort((a, b) => (b.pinnedAt ?? 0) - (a.pinnedAt ?? 0));
   },
 
   async getById(id: string): Promise<Folder | undefined> {
@@ -25,6 +27,7 @@ export const folderService = {
       id: uid(),
       ...data,
       sortOrder: maxOrder.length > 0 ? (maxOrder[maxOrder.length - 1]?.sortOrder ?? -1) + 1 : 0,
+      pinnedAt: null,
       createdAt: now,
       updatedAt: now,
     };
@@ -34,11 +37,21 @@ export const folderService = {
     return folder;
   },
 
-  async update(id: string, data: Partial<Pick<Folder, 'name' | 'description'>>): Promise<void> {
+  async update(id: string, data: Partial<Pick<Folder, 'name' | 'description' | 'pinnedAt'>>): Promise<void> {
     await db.folders.update(id, { ...data, updatedAt: Date.now() });
     const updated = await db.folders.get(id);
     if (updated) syncService.syncOne('folders', updated);
     log.info('Folder updated', { id });
+  },
+
+  // 置顶 / 取消置顶
+  async setPinned(id: string, pinned: boolean): Promise<void> {
+    await db.folders.update(id, {
+      pinnedAt: pinned ? Date.now() : null,
+      updatedAt: Date.now(),
+    });
+    const updated = await db.folders.get(id);
+    if (updated) syncService.syncOne('folders', updated);
   },
 
   async remove(id: string): Promise<void> {
