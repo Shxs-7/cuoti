@@ -1,6 +1,5 @@
 import { db } from '@/db/database';
 import { createLogger } from '@/lib/logger';
-import { syncService } from './sync.service';
 import type { ReviewInfo, Question } from '@/models';
 
 const log = createLogger('review.service');
@@ -40,8 +39,6 @@ export const reviewService = {
       consecutiveCorrect: consecutive,
       updatedAt: now,
     });
-    const updated = await db.reviews.get(questionId);
-    if (updated) syncService.syncOne('reviews', updated);
     log.info('Review recorded', { questionId, rating, mastery });
   },
 

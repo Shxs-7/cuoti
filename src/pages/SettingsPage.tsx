@@ -4,7 +4,6 @@ import { useUIStore } from '@/stores/ui.store';
 import { db } from '@/db/database';
 import { backupService, type BackupFile } from '@/services/backup.service';
 import { questionService } from '@/services/question.service';
-import { syncService } from '@/services/sync.service';
 import { autoBackupService } from '@/services/autobackup.service';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -65,8 +64,6 @@ export function SettingsPage() {
     if (!pendingImport) return;
     try {
       await backupService.restoreData(pendingImport);
-      // 导入后立即把数据推到云端
-      syncService.fullSync();
       toast('数据恢复成功', 'success');
       loadInfo();
     } catch {
@@ -180,31 +177,6 @@ export function SettingsPage() {
         </Button>
       </div>
 
-      {/* Cloud Sync */}
-      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700">☁️ 云同步</h3>
-        <p className="text-xs text-gray-400">数据保存在 Supabase 云端，多设备自动同步</p>
-        <div className="text-xs text-gray-500 space-y-1">
-          <div>设备 ID：<span className="font-mono text-[10px] bg-gray-100 px-1 rounded">{syncService.deviceId.slice(0, 8)}...</span></div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="primary" size="sm" className="flex-1" onClick={async () => {
-            toast('同步中...', 'info');
-            const ok = await syncService.fullSync();
-            if (ok) {
-              toast('同步完成', 'success');
-            } else {
-              toast('同步失败：云端连接异常（Key 失效或项目暂停），数据仍安全保存在本地', 'error');
-            }
-          }}>🔄 立即同步</Button>
-          <Button variant="ghost" size="sm" className="flex-1" onClick={() => {
-            navigator.clipboard.writeText(syncService.deviceId);
-            toast('设备 ID 已复制', 'success');
-          }}>📋 复制设备 ID</Button>
-        </div>
-        <p className="text-[10px] text-gray-300">所有设备的数据会自动合并同步，删除操作也会同步到其他设备</p>
-      </div>
-
       {/* Danger zone */}
       <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
         <h3 className="text-sm font-semibold text-red-600">危险操作</h3>
@@ -252,7 +224,6 @@ export function SettingsPage() {
         onConfirm={async () => {
           const ok = await autoBackupService.restore();
           if (ok) {
-            syncService.fullSync();
             toast('自动备份已恢复', 'success');
           } else {
             toast('恢复失败', 'error');

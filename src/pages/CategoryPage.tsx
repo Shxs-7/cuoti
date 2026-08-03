@@ -4,7 +4,6 @@ import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { categoryService } from '@/services/category.service';
 import { folderService } from '@/services/folder.service';
-import { syncService } from '@/services/sync.service';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -80,11 +79,6 @@ export function CategoryPage() {
     promise
       .then(async () => {
         toast(editingFolder ? '已更新' : '文件夹已创建', 'success');
-        const flds = await folderService.getByCategory(categoryId!);
-        const changed = editingFolder
-          ? flds.find(f => f.id === editingFolder.id)
-          : flds.find(f => f.name === name);
-        if (changed) syncService.syncOne('folders', changed);
         closeForm();
         loadData();
       })

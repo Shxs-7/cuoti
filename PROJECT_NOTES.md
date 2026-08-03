@@ -5,7 +5,7 @@
 ## 一、项目概况
 
 - 公考（公务员考试）错题记录与复习工具，PWA 移动端应用，全中文界面。
-- 技术栈：React 18 + TypeScript + Vite 5 + Tailwind CSS + Dexie (IndexedDB) + Zustand + Supabase 云同步 + Vite PWA。
+- 技术栈：React 18 + TypeScript + Vite 5 + Tailwind CSS + Dexie (IndexedDB) + Zustand + Vite PWA（纯本地应用，无云端）。
 - 部署基路径为 `/cuoti/`（GitHub Pages 子路径），路由用 HashRouter。
 
 ## 二、目录结构
@@ -21,23 +21,18 @@ src/
 └── pages/        # 17 个路由页面（见 App.tsx）
 ```
 
-## 三、数据与同步机制
+## 三、数据与备份
 
-- 本地数据全在 IndexedDB（`cuoti-db`），离线可用；表：categories、folders、questions、tags、reviews、knowledgePoints、journal、deletions。
-- 云同步（`sync.service.ts`）：
-  - `fullSync()` = 注册设备 → `pushAll()`（本地全量 upsert，带上 `device_id`）→ `pullAll()`（拉取**所有设备**的行，按 `updated_at` 后写覆盖）。
-  - 单条即时同步：各 service 在 create/update 后调用 `syncOne(远程表名, row)`（best effort，失败只记日志）。
-  - 删除用**墓碑机制**：`markDeleted(表名, id)` 在本地 `deletions` 表写入并 push 到云端；其他设备 pull 时发现墓碑（`deleted_at >= updated_at`）则删除本地行，防止"复活"。墓碑会一直保留在云端（不清理，可接受）。
-  - 注意：`reviews` 表主键是 `question_id`，upsert 冲突列与其他表不同（`sync.service` 的 TABLE_MAP 里配置）。
-- Supabase 需在服务器执行 `supabase.sql`（幂等，可重复跑）；RLS 目前是 `USING (true)` + anon key，无真实用户鉴权，适合个人使用，不建议多人共用同一 Supabase 项目。
+- **纯本地存储**：所有数据在 IndexedDB（`cuoti-db`），表：categories、folders、questions、tags、reviews、knowledgePoints、journal、deletions（deletions 为早期云同步遗留的空表，无实际作用）。
+- **自动备份**：应用启动时 `autoBackupService.startAutoBackup()`，任何数据变更 2 秒后写入 localStorage，每 5 分钟兜底保存一次；「设置」页可查看最近备份时间并一键恢复。
+- **手动备份**：设置页可导出全部数据为 JSON 文件（含知识点、日记等全部 8 张表），也可导入恢复；导入会覆盖当前数据。
+- 2026-08-03 起已按用户要求**移除云同步**（Supabase），`supabase.sql` 仅作历史参考保留，不再使用。
 
 ## 四、已知限制（有意保留）
 
-1. **无用户登录/鉴权**：所有拿到 anon key 的人都能读写全部数据，只适合个人项目。
-2. **每台设备会各自创建默认分类**（行测/申论/面试/公基），多设备首次同步后可能看到重复分类，需手动删掉多余的。
-3. **云端保留已删除行**（墓碑不清除），数据量会缓慢增长；对个人错题本规模无影响。
-4. **图片 EXIF 方向未处理**：iPhone 竖拍照片在旧浏览器上可能旋转；现代浏览器大多已自动处理。
-5. 分类排序接口 `categoryService.reorder` 已存在但 UI 未提供拖拽排序入口。
+1. **图片 EXIF 方向未处理**：iPhone 竖拍照片在旧浏览器上可能旋转；现代浏览器大多已自动处理。
+2. 分类排序接口 `categoryService.reorder` 已存在但 UI 未提供拖拽排序入口。
+3. **数据只在当前设备**：换手机/换浏览器不会自动带数据，请用「导出备份」转移，或依赖自动备份。
 
 ## 五、运维
 
@@ -48,4 +43,4 @@ src/
 
 ## 六、最近一次大检查（2026-08-01）
 
-修复了构建失败、Lint 不可用、多设备同步失效、reviews/知识点/日记无法同步、删除残留（复习记录/知识点/标签计数）、备份缺知识点和日记、自动备份未启动、清空数据不生效、日记默认日期时区偏移、搜索无防抖且纯标签搜索无结果、PWA 图标缺失等问题。详见 `CHANGELOG.md`。
+修复了构建失败、Lint 不可用、多设备同步失效、reviews/知识点/日记无法同步、删除残留（复习记录/知识点/标签计数）、备份缺知识点和日记、自动备份未启动、清空数据不生效、日记默认日期时区偏移、搜索无防抖且纯标签搜索无结果、PWA 图标缺失等问题。2026-08-03 按用户要求移除云同步，改为纯本地 + 备份方案。详见 `CHANGELOG.md`。

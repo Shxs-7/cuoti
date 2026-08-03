@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { knowledgeService } from '@/services/knowledge.service';
-import { syncService } from '@/services/sync.service';
 import { compressImage } from '@/lib/compression';
 import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
 import { Badge } from '@/components/ui/Badge';
@@ -79,9 +78,6 @@ export function KnowledgeDetailPage() {
         rating: eRating,
       };
       await knowledgeService.update(kpId, updateData);
-      // Also push to cloud immediately
-      const updated = await knowledgeService.getById(kpId);
-      if (updated) syncService.syncOne('knowledge_points', updated);
       toast('已更新', 'success');
       setEditing(false);
       load();

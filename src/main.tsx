@@ -6,7 +6,6 @@ import './styles/globals.css';
 import { db } from '@/db/database';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 import { uid } from '@/lib/uid';
-import { syncService } from '@/services/sync.service';
 import { autoBackupService } from '@/services/autobackup.service';
 
 // Migrate data from old database names to the new one
@@ -77,11 +76,6 @@ initDefaults().finally(() => {
       <App />
     </React.StrictMode>
   );
-
-  // Background sync after page is live
-  setTimeout(() => {
-    syncService.fullSync().catch(e => console.warn('Background sync failed:', e));
-  }, 2000);
 
   // 启动自动备份（数据变更后自动保存到 localStorage）
   autoBackupService.startAutoBackup();

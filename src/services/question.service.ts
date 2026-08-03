@@ -1,7 +1,6 @@
 import { db } from '@/db/database';
 import { uid } from '@/lib/uid';
 import { createLogger } from '@/lib/logger';
-import { syncService } from './sync.service';
 import { tagService } from './tag.service';
 import type { Question } from '@/models';
 
@@ -53,8 +52,6 @@ export const questionService = {
       await tagService.updateCount(t, 1);
     }
 
-    // push to cloud (best effort)
-    syncService.syncOne('questions', question);
     log.info('Question created', { id: question.id, title: question.title });
     return question;
   },
@@ -74,9 +71,6 @@ export const questionService = {
       await tagService.syncTags(old.tags, data.tags);
     }
 
-    // push to cloud (best effort)
-    const updated = await db.questions.get(id);
-    if (updated) syncService.syncOne('questions', updated);
     log.info('Question updated', { id });
   },
 
@@ -90,9 +84,6 @@ export const questionService = {
       await db.questions.delete(id);
     });
 
-    // propagate deletion to other devices
-    await syncService.markDeleted('questions', id);
-    await syncService.markDeleted('reviews', id);
     log.info('Question removed', { id });
   },
 

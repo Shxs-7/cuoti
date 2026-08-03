@@ -1,5 +1,12 @@
 # 更新记录
 
+## 2026-08-03（第十次）— 移除云同步，专注本地备份
+
+- 按用户要求移除 Supabase 云同步：删除 `sync.service.ts`、`lib/supabase.ts` 和 `@supabase/supabase-js` 依赖，移除所有页面/服务里的同步调用与设置页"云同步"区块。
+- 数据完全本地化（IndexedDB），保留并完善本地备份：自动备份（变更后自动保存 + 5 分钟兜底 + 设置页可恢复）、手动导出/导入 JSON（含全部数据表）。
+- 应用体积明显减小：主包从约 498KB 降至 278KB。
+- `supabase.sql` 仅作历史参考保留，不再使用。
+
 ## 2026-08-03（第九次）— 云同步权限修复
 
 - 定位云同步一直失败的根本原因：Supabase 表缺少对 anon/service_role 等角色的授权（PostgREST 返回 permission denied），与 Key 无关。
