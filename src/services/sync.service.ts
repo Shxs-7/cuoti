@@ -95,7 +95,8 @@ export const syncService = {
     });
   },
 
-  async pullAll() {
+  async pullAll(): Promise<string[]> {
+    const failed: string[] = [];
     // 1) 先拉取删除标记，后续拉数据时跳过已被删除的记录，避免"复活"
     const tombstones = new Map<string, number>(); // `${remoteTable}:${recordId}` -> deletedAt
     try {
@@ -115,7 +116,7 @@ export const syncService = {
         }
         log.info(`Pulled ${data.length} deletions`);
       }
-    } catch (e) { log.warn('Pull deletions failed', e); }
+    } catch (e) { failed.push('deletions'); log.warn('Pull deletions failed', e); }
 
     // 2) 拉取各表数据（不再按 device_id 过滤，多设备数据互通）
     for (const [, { local, remote }] of Object.entries(TABLE_MAP)) {
@@ -147,36 +148,44 @@ export const syncService = {
           }
         }
         log.info(`Pulled ${data.length} from ${remote}`);
-      } catch (e) { log.warn(`Pull ${remote} failed`, e); }
+      } catch (e) { failed.push(remote); log.warn(`Pull ${remote} failed`, e); }
     }
+    return failed;
   },
 
-  async pushAll() {
+  async pushAll(): Promise<string[]> {
+    const failed: string[] = [];
     for (const [, { local, remote, conflictKey }] of Object.entries(TABLE_MAP)) {
       try {
         const rows = await local.toArray();
         if (!rows.length) continue;
         const payload = rows.map((r: any) => ({ ...toSnake(r), device_id: this.deviceId }));
         const { error } = await supabase.from(remote).upsert(payload, { onConflict: conflictKey });
-        if (error) log.warn(`Push ${remote}: ${error.message}`);
-      } catch (e) { log.warn(`Push ${remote} failed`, e); }
+        if (error) { failed.push(remote); log.warn(`Push ${remote}: ${error.message}`); }
+      } catch (e) { failed.push(remote); log.warn(`Push ${remote} failed`, e); }
     }
     log.info('Push done');
+    return failed;
   },
 
-  async fullSync() {
+  async fullSync(): Promise<boolean> {
+    const errors: string[] = [];
     try {
       await Promise.race([
         (async () => {
-          await this.registerDevice();
-          await this.pushAll();
-          await this.pullAll();
+          try {
+            await this.registerDevice();
+          } catch { errors.push('registerDevice'); }
+          errors.push(...await this.pushAll());
+          errors.push(...await this.pullAll());
         })(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Sync timeout')), SYNC_TIMEOUT)),
       ]);
     } catch {
-      log.warn('Full sync skipped (timeout or network error)');
+      errors.push('timeout');
     }
+    if (errors.length) log.warn('Full sync had errors: ' + errors.join(', '));
+    return errors.length === 0;
   },
 
   // 同步单条记录到云端（table 为远程表名）

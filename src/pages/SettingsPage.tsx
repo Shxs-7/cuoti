@@ -190,10 +190,12 @@ export function SettingsPage() {
         <div className="flex gap-2">
           <Button variant="primary" size="sm" className="flex-1" onClick={async () => {
             toast('同步中...', 'info');
-            try {
-              await syncService.fullSync();
+            const ok = await syncService.fullSync();
+            if (ok) {
               toast('同步完成', 'success');
-            } catch { toast('同步失败', 'error'); }
+            } else {
+              toast('同步失败：云端连接异常（Key 失效或项目暂停），数据仍安全保存在本地', 'error');
+            }
           }}>🔄 立即同步</Button>
           <Button variant="ghost" size="sm" className="flex-1" onClick={() => {
             navigator.clipboard.writeText(syncService.deviceId);
