@@ -119,6 +119,14 @@ ALTER TABLE knowledge_points ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 3;
 ALTER TABLE knowledge_points ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
 ALTER TABLE folders ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ;
 
+-- 授权：让 anon / authenticated / service_role 能读写所有表（关键！漏了会导致云同步全部失败）
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+
 -- 开启 RLS
 ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;

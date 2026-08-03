@@ -1,5 +1,10 @@
 # 更新记录
 
+## 2026-08-03（第九次）— 云同步权限修复
+
+- 定位云同步一直失败的根本原因：Supabase 表缺少对 anon/service_role 等角色的授权（PostgREST 返回 permission denied），与 Key 无关。
+- `supabase.sql` 新增 GRANT 授权语句；在 Supabase SQL Editor 执行后，App 现有 Key 即可正常同步，无需改代码。
+
 ## 2026-08-03（第八次）— AI 手动分析 + 表单保存按钮吸底
 
 - AI 页不再进入页面就自动分析，改为手动点「🔄 重新分析」；未分析时显示引导提示。
