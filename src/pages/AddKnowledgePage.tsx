@@ -70,7 +70,7 @@ export function AddKnowledgePage() {
   };
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-24">
       {folder && <div className="text-sm text-gray-500">保存到：📂 {folder.name}</div>}
 
       <div>
@@ -123,7 +123,7 @@ export function AddKnowledgePage() {
           placeholder="多个标签用逗号分隔" />
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 -mx-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-gray-50/95 backdrop-blur-md border-t border-gray-100 z-10 flex gap-3">
         <button type="button"
           className="flex-1 py-2.5 text-sm font-medium rounded-lg bg-gray-200 text-gray-700 active:bg-gray-300 min-h-[44px]"
           onTouchEnd={(e) => { e.preventDefault(); navigate(-1); }}

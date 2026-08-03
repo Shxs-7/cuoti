@@ -102,7 +102,7 @@ export function AddQuestionPage() {
   };
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-24">
       {/* Folder info */}
       {folder && (
         <div className="text-sm text-gray-500">
@@ -177,7 +177,7 @@ export function AddQuestionPage() {
 
       <TagInput ref={tagInputRef} tags={tags} allTags={allTags} onChange={setTags} />
 
-      <div className="flex gap-3 pt-2">
+      <div className="sticky bottom-0 -mx-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-gray-50/95 backdrop-blur-md border-t border-gray-100 z-10 flex gap-3">
         <Button variant="secondary" className="flex-1" onClick={() => navigate(-1)}>取消</Button>
         <Button className="flex-1" onClick={handleSubmit} disabled={saving}>
           {saving ? '保存中...' : '保存'}

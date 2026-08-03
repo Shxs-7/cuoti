@@ -24,8 +24,6 @@ export function AIPage() {
   useEffect(() => {
     setTitle('AI 分析');
     loadStats();
-    // 自动执行一次分析
-    runAI();
   }, []);
 
   const loadStats = async () => {
@@ -170,6 +168,14 @@ export function AIPage() {
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">📊 分析结果</h3>
           <div className="text-sm whitespace-pre-wrap leading-relaxed">{result}</div>
+        </div>
+      )}
+
+      {!result && !loading && (
+        <div className="text-center py-10 text-gray-400 text-sm space-y-1">
+          <div className="text-3xl mb-2">🤖</div>
+          <div>点击上方「🔄 重新分析」生成分析结果</div>
+          <div className="text-xs text-gray-300">会自动分析最近错题与日记高频错因</div>
         </div>
       )}
 

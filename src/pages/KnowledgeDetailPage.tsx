@@ -111,7 +111,7 @@ export function KnowledgeDetailPage() {
   if (!kp) return null;
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-24">
       {editing ? (
         <>
           <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
@@ -160,7 +160,7 @@ export function KnowledgeDetailPage() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="sticky bottom-0 -mx-4 -mb-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-white border-t border-gray-100 z-10 flex gap-2">
               <button type="button"
                 className="flex-1 py-2.5 text-sm font-medium rounded-lg bg-gray-200 text-gray-700 active:bg-gray-300 min-h-[44px]"
                 onTouchEnd={(e) => { e.preventDefault(); setEditing(false); }}
