@@ -59,12 +59,13 @@ export function ReviewSessionPage() {
 
   const q = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100;
+  const hasPhoto = q.photos.length > 0;
 
   return (
     <div className="space-y-4 pb-6">
       {/* Progress */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <span>{currentIndex + 1} / {questions.length}</span>
+        <span>{currentIndex + 1} / {questions.length} · 🔀 随机顺序</span>
         <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-primary-500 rounded-full transition-all duration-300"
@@ -77,22 +78,23 @@ export function ReviewSessionPage() {
       <div
         className="bg-white rounded-2xl shadow-md p-5 min-h-[200px]"
       >
-        <h3 className="text-lg font-semibold mb-3">{q.title || '无标题'}</h3>
-
-        {q.content && (
-          <div className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">{q.content}</div>
+        {/* 有图片的题：只显示第一张图片，不显示标题/内容/其他图片 */}
+        {hasPhoto ? (
+          <img
+            src={q.photos[0]}
+            alt="题目图片"
+            onClick={() => setShowPhoto(q.photos[0])}
+            className="w-full max-h-[60vh] object-contain rounded-xl bg-gray-50 cursor-pointer active:opacity-80"
+          />
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold mb-3">{q.title || '无标题'}</h3>
+            {q.content && (
+              <div className="text-sm text-gray-700 mb-4 whitespace-pre-wrap">{q.content}</div>
+            )}
+            {q.source && <div className="text-xs text-gray-400 mb-3">📖 {q.source}</div>}
+          </>
         )}
-
-        {q.photos.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {q.photos.map((p, idx) => (
-              <img key={idx} src={p} alt="" onClick={() => setShowPhoto(p)}
-                className="w-20 h-20 object-cover rounded-lg cursor-pointer active:opacity-80" />
-            ))}
-          </div>
-        )}
-
-        {q.source && <div className="text-xs text-gray-400 mb-3">📖 {q.source}</div>}
 
         {/* Answer reveal */}
         {!revealed ? (

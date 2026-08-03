@@ -5,6 +5,16 @@ import type { ReviewInfo, Question } from '@/models';
 
 const log = createLogger('review.service');
 
+// Fisher-Yates 随机打乱（每次都返回新数组、新顺序）
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export const reviewService = {
   async getByQuestion(questionId: string): Promise<ReviewInfo | undefined> {
     return db.reviews.get(questionId);
@@ -75,12 +85,7 @@ export const reviewService = {
       result = questions.filter(q => Array.isArray(q.tags) && q.tags.includes(filters.tag!));
     }
 
-    // shuffle
-    for (let i = result.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
-    }
-
-    return result;
+    // 每次进入复习都随机打乱顺序
+    return shuffleArray(result);
   },
 };
