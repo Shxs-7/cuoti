@@ -26,6 +26,7 @@ export function QuestionDetailPage() {
   const [showPhoto, setShowPhoto] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [categoryTags, setCategoryTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const tagInputRef = useRef<TagInputHandle>(null);
 
@@ -52,6 +53,7 @@ export function QuestionDetailPage() {
     if (!q) { navigate('/'); return; }
     setQuestion(q);
     setTitle(q.title || '题目详情');
+    setCategoryTags(await questionService.getTagsByCategory(q.categoryId));
     const r = await reviewService.getByQuestion(questionId);
     setReview(r ?? null);
   };
@@ -225,7 +227,7 @@ export function QuestionDetailPage() {
               </div>
             </div>
 
-            <TagInput ref={tagInputRef} tags={eTags} allTags={allTags} onChange={setETags} />
+            <TagInput ref={tagInputRef} tags={eTags} allTags={allTags} onChange={setETags} categoryTags={categoryTags} />
 
             <div className="sticky bottom-0 -mx-4 -mb-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-white border-t border-gray-100 z-10 flex gap-2">
               <button type="button"

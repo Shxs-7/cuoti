@@ -125,4 +125,16 @@ export const questionService = {
       .reverse()
       .sortBy('createdAt');
   },
+
+  // 某分类下所有错题用过的标签（用于添加错题时提示可选的标签）
+  async getTagsByCategory(categoryId: string): Promise<string[]> {
+    const all = await db.questions.where('categoryId').equals(categoryId).toArray();
+    const set = new Set<string>();
+    for (const q of all) {
+      if (Array.isArray(q.tags)) {
+        for (const t of q.tags) set.add(t);
+      }
+    }
+    return [...set];
+  },
 };

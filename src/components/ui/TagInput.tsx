@@ -9,10 +9,11 @@ interface Props {
   tags: string[];
   allTags: Tag[];
   onChange: (tags: string[]) => void;
+  categoryTags?: string[]; // 当前分类已有的标签，用于提示快速选择
 }
 
 export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
-  { tags, allTags, onChange }, ref
+  { tags, allTags, onChange, categoryTags }, ref
 ) {
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -88,6 +89,23 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-gray-600 mb-1">标签</label>
+      {categoryTags && categoryTags.length > 0 && (
+        <div className="mb-1.5">
+          <div className="text-[11px] text-gray-400 mb-1">💡 当前分类的标签（点击即可添加）：</div>
+          <div className="flex flex-wrap gap-1">
+            {categoryTags.filter(t => !tags.includes(t)).slice(0, 12).map(t => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => addTags(t)}
+                className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs active:bg-blue-100"
+              >
+                + {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap gap-1.5 p-2 border border-gray-300 rounded-xl bg-white min-h-[44px] focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent">
         {tags.map(t => (
           <span

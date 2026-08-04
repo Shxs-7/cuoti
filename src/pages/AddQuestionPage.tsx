@@ -22,6 +22,7 @@ export function AddQuestionPage() {
 
   const [folder, setFolder] = useState<Folder | null>(null);
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [categoryTags, setCategoryTags] = useState<string[]>([]);
   const [title, setTitle_] = useState('');
   const [content, setContent] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -45,7 +46,10 @@ export function AddQuestionPage() {
     setAllTags(t);
     if (folderId) {
       const f = await folderService.getById(folderId);
-      if (f) setFolder(f);
+      if (f) {
+        setFolder(f);
+        setCategoryTags(await questionService.getTagsByCategory(f.categoryId));
+      }
     }
   };
 
@@ -175,7 +179,7 @@ export function AddQuestionPage() {
         </div>
       </div>
 
-      <TagInput ref={tagInputRef} tags={tags} allTags={allTags} onChange={setTags} />
+      <TagInput ref={tagInputRef} tags={tags} allTags={allTags} onChange={setTags} categoryTags={categoryTags} />
 
       <div className="sticky bottom-0 -mx-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-gray-50/95 backdrop-blur-md border-t border-gray-100 z-10 flex gap-3">
         <Button variant="secondary" className="flex-1" onClick={() => navigate(-1)}>取消</Button>
