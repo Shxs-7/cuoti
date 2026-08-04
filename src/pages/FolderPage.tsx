@@ -46,7 +46,7 @@ export function FolderPage() {
   if (!folder) return null;
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-24 flex flex-col min-h-full">
       {/* Knowledge Points Section */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -141,7 +141,7 @@ export function FolderPage() {
       </div>
 
       {/* Action buttons（吸底固定，数据多也不用滑到底） */}
-      <div className="sticky bottom-0 -mx-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-gray-50/95 backdrop-blur-md border-t border-gray-100 z-10 flex gap-2">
+      <div className="sticky bottom-0 mt-auto -mx-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-gray-50/95 backdrop-blur-md border-t border-gray-100 z-10 flex gap-2">
         <Button className="flex-1" onClick={() => navigate(`/question/new/${folderId}`)}>
           + 添加错题
         </Button>
