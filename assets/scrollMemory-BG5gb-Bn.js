@@ -1,0 +1,1 @@
+const t=new Map;function n(o){const e=document.querySelector("main");e&&t.set(o,e.scrollTop)}function c(o){const e=t.get(o);e!==void 0&&requestAnimationFrame(()=>{const r=document.querySelector("main");r&&(r.scrollTop=e)})}export{c as r,n as s};
