@@ -7,6 +7,7 @@ export interface Question {
   photos: string[];
   answer: string;
   wrongAnswer: string;
+  errorReason: string; // 错误原因
   analysis: string;
   source: string;
   difficulty: number; // 1-5

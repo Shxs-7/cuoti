@@ -28,6 +28,7 @@ export function AddQuestionPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [answer, setAnswer] = useState('');
   const [wrongAnswer, setWrongAnswer] = useState('');
+  const [errorReason, setErrorReason] = useState('');
   const [analysis, setAnalysis] = useState('');
   const [source, setSource] = useState('');
   const [difficulty, setDifficulty] = useState(3);
@@ -91,6 +92,7 @@ export function AddQuestionPage() {
         photos,
         answer,
         wrongAnswer,
+        errorReason,
         analysis,
         source,
         difficulty,
@@ -155,7 +157,9 @@ export function AddQuestionPage() {
 
       <Input label="正确答案" value={answer} onChange={e => setAnswer(e.target.value)} placeholder="这道题的正确答案" />
       <Input label="我的错误答案" value={wrongAnswer} onChange={e => setWrongAnswer(e.target.value)} placeholder="你当时选了/写了什么" />
-      <Textarea label="解析" value={analysis} onChange={e => setAnalysis(e.target.value)} placeholder="知识点解析、错因分析..." />
+      <Textarea label="错误原因" value={errorReason} onChange={e => setErrorReason(e.target.value)} placeholder="为什么会做错？审题不清、知识点不熟、粗心..." />
+
+      <Textarea label="解析" value={analysis} onChange={e => setAnalysis(e.target.value)} placeholder="这道题的知识点解析..." />
 
       <Input label="来源" value={source} onChange={e => setSource(e.target.value)} placeholder="如：2024国考真题、粉笔模考" />
 

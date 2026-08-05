@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { folderService } from '@/services/folder.service';
 import { questionService } from '@/services/question.service';
@@ -10,9 +10,11 @@ import { StarRating } from '@/components/ui/StarRating';
 import type { Folder, Question, KnowledgePoint } from '@/models';
 import { formatDate } from '@/lib/date';
 import { DIFFICULTY_LABELS } from '@/models/question';
+import { saveScroll, restoreScroll } from '@/lib/scrollMemory';
 
 export function FolderPage() {
   const { folderId } = useParams<{ folderId: string }>();
+  const location = useLocation();
   const { setTitle } = useAppStore();
   const navigate = useNavigate();
   const [folder, setFolder] = useState<Folder | null>(null);
@@ -23,6 +25,11 @@ export function FolderPage() {
     if (!folderId) return;
     loadData();
   }, [folderId]);
+
+  // 离开页面时记录滚动位置
+  useEffect(() => {
+    return () => saveScroll(location.pathname);
+  }, []);
 
   const loadData = async () => {
     if (!folderId) return;
@@ -36,6 +43,7 @@ export function FolderPage() {
     ]);
     setQuestions(qs);
     setKps(ks);
+    requestAnimationFrame(() => restoreScroll(location.pathname));
   };
 
   const togglePinKp = async (kp: KnowledgePoint) => {
@@ -46,7 +54,7 @@ export function FolderPage() {
   if (!folder) return null;
 
   return (
-    <div className="space-y-4 pb-24 flex flex-col min-h-full">
+    <div className="space-y-4 pb-32">
       {/* Knowledge Points Section */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -141,7 +149,7 @@ export function FolderPage() {
       </div>
 
       {/* Action buttons（吸底固定，数据多也不用滑到底） */}
-      <div className="sticky bottom-0 mt-auto -mx-4 px-4 pt-3 pb-[calc(14px+env(safe-area-inset-bottom,0px))] bg-gray-50/95 backdrop-blur-md border-t border-gray-100 z-10 flex gap-2">
+      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-30 px-4 py-3 bg-gray-50/95 backdrop-blur-md border-t border-gray-100 flex gap-2">
         <Button className="flex-1" onClick={() => navigate(`/question/new/${folderId}`)}>
           + 添加错题
         </Button>

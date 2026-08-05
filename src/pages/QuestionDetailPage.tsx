@@ -35,6 +35,7 @@ export function QuestionDetailPage() {
   const [eContent, setEContent] = useState('');
   const [eAnswer, setEAnswer] = useState('');
   const [eWrong, setEWrong] = useState('');
+  const [eErrorReason, setEErrorReason] = useState('');
   const [eAnalysis, setEAnalysis] = useState('');
   const [eSource, setESource] = useState('');
   const [eDiff, setEDiff] = useState(3);
@@ -64,6 +65,7 @@ export function QuestionDetailPage() {
     setEContent(question.content);
     setEAnswer(question.answer);
     setEWrong(question.wrongAnswer);
+    setEErrorReason(question.errorReason || '');
     setEAnalysis(question.analysis);
     setESource(question.source);
     setEDiff(question.difficulty);
@@ -101,6 +103,7 @@ export function QuestionDetailPage() {
         content: eContent,
         answer: eAnswer,
         wrongAnswer: eWrong,
+        errorReason: eErrorReason,
         analysis: eAnalysis,
         source: eSource,
         difficulty: eDiff,
@@ -211,6 +214,12 @@ export function QuestionDetailPage() {
             </div>
 
             <div>
+              <label className="text-xs text-gray-500 mb-1 block">错误原因</label>
+              <textarea value={eErrorReason} onChange={e => setEErrorReason(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400 min-h-[60px] resize-y" />
+            </div>
+
+            <div>
               <label className="text-xs text-gray-500 mb-1 block">来源</label>
               <input value={eSource} onChange={e => setESource(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary-400" />
@@ -279,6 +288,13 @@ export function QuestionDetailPage() {
             <div className="bg-white rounded-xl p-4 shadow-sm">
               <h3 className="text-sm font-medium text-gray-500 mb-1">解析</h3>
               <p className="text-sm whitespace-pre-wrap">{question.analysis}</p>
+            </div>
+          )}
+
+          {question.errorReason && (
+            <div className="bg-white rounded-xl p-4 shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">❌ 错误原因</h3>
+              <p className="text-sm whitespace-pre-wrap">{question.errorReason}</p>
             </div>
           )}
 

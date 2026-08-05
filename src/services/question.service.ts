@@ -24,7 +24,7 @@ export const questionService = {
 
   async create(
     data: Pick<Question, 'folderId' | 'categoryId' | 'title' | 'content' | 'photos'
-      | 'answer' | 'wrongAnswer' | 'analysis' | 'source' | 'difficulty' | 'tags'>
+      | 'answer' | 'wrongAnswer' | 'errorReason' | 'analysis' | 'source' | 'difficulty' | 'tags'>
   ): Promise<Question> {
     const now = Date.now();
     const question: Question = {

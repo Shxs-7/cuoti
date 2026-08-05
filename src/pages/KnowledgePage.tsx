@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { knowledgeService } from '@/services/knowledge.service';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StarRating } from '@/components/ui/StarRating';
 import type { KnowledgePoint } from '@/models';
 import { formatDate } from '@/lib/date';
+import { saveScroll, restoreScroll } from '@/lib/scrollMemory';
 
 export function KnowledgePage() {
   const { setTitle } = useAppStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [kps, setKps] = useState<KnowledgePoint[]>([]);
 
   useEffect(() => {
     setTitle('知识点');
-    knowledgeService.getAll().then(setKps);
+    knowledgeService.getAll().then(kps => {
+      setKps(kps);
+      requestAnimationFrame(() => restoreScroll(location.pathname));
+    });
+    return () => saveScroll(location.pathname);
   }, []);
 
   const togglePin = async (kp: KnowledgePoint) => {

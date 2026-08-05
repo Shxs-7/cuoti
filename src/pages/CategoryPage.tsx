@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { categoryService } from '@/services/category.service';
@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { Category, Folder } from '@/models';
+import { saveScroll, restoreScroll } from '@/lib/scrollMemory';
 
 export function CategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
+  const location = useLocation();
   const { setTitle } = useAppStore();
   const toast = useUIStore(s => s.toast);
   const navigate = useNavigate();
@@ -29,6 +31,10 @@ export function CategoryPage() {
     loadData();
   }, [categoryId]);
 
+  useEffect(() => {
+    return () => saveScroll(location.pathname);
+  }, []);
+
   const loadData = async () => {
     if (!categoryId) return;
     const cat = await categoryService.getById(categoryId);
@@ -41,6 +47,7 @@ export function CategoryPage() {
     const c: Record<string, number> = {};
     flds.forEach((f, i) => { c[f.id] = counts[i]; });
     setCounts(c);
+    requestAnimationFrame(() => restoreScroll(location.pathname));
   };
 
   const openAdd = () => {

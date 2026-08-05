@@ -46,10 +46,35 @@ async function migrateOldData() {
   }
 }
 
+// 旧数据迁移：老版本只有"解析"字段，新版本拆成"错误原因"+"解析"
+async function migrateQuestionFields() {
+  try {
+    const questions = await db.questions.toArray();
+    const updates: { id: string; errorReason: string; analysis: string }[] = [];
+    for (const q of questions) {
+      if (q.errorReason === undefined && q.analysis) {
+        updates.push({ id: q.id, errorReason: q.analysis, analysis: '' });
+      }
+    }
+    if (updates.length) {
+      await db.transaction('rw', db.questions, async () => {
+        for (const u of updates) {
+          await db.questions.update(u.id, { errorReason: u.errorReason, analysis: u.analysis });
+        }
+      });
+      console.info(`Migrated ${updates.length} questions to errorReason`);
+    }
+  } catch (e) {
+    console.warn('Migrate question fields failed:', e);
+  }
+}
+
 async function initDefaults() {
   try {
     // First try to migrate old data
     await migrateOldData();
+    // 拆分解析字段
+    await migrateQuestionFields();
 
     const count = await db.categories.count();
     if (count === 0) {
