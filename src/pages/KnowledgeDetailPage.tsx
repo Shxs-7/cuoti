@@ -4,7 +4,6 @@ import { useAppStore } from '@/stores/app.store';
 import { useUIStore } from '@/stores/ui.store';
 import { knowledgeService } from '@/services/knowledge.service';
 import { compressImage } from '@/lib/compression';
-import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StarRating } from '@/components/ui/StarRating';
@@ -53,10 +52,7 @@ export function KnowledgeDetailPage() {
 
   const handlePhotoAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || ePhotos.length + files.length > MAX_PHOTOS_PER_QUESTION) {
-      toast(`最多${MAX_PHOTOS_PER_QUESTION}张`, 'error');
-      return;
-    }
+    if (!files) return;
     for (let i = 0; i < files.length; i++) {
       try {
         const compressed = await compressImage(files[i]);
@@ -133,12 +129,10 @@ export function KnowledgeDetailPage() {
                       className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px]">✕</button>
                   </div>
                 ))}
-                {ePhotos.length < MAX_PHOTOS_PER_QUESTION && (
-                  <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 active:border-primary-400">
-                    <span className="text-xl">+</span>
-                    <input ref={fileRef} type="file" accept="image/*" multiple onChange={handlePhotoAdd} className="hidden" />
-                  </label>
-                )}
+                <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 active:border-primary-400">
+                  <span className="text-xl">+</span>
+                  <input ref={fileRef} type="file" accept="image/*" multiple onChange={handlePhotoAdd} className="hidden" />
+                </label>
               </div>
             </div>
 

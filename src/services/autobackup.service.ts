@@ -7,6 +7,7 @@ type DexieTable = Table<any, any>;
 const log = createLogger('autobackup');
 const STORAGE_KEY = 'cuoti-autobackup';
 const BACKUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const MAX_BACKUP_CHARS = 4 * 1024 * 1024; // 约 4MB，超过则不写入（localStorage 容量有限）
 
 export const autoBackupService = {
   async save(): Promise<void> {
@@ -26,7 +27,12 @@ export const autoBackupService = {
         knowledgePoints, journal, deletions,
         updatedAt: Date.now(),
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const json = JSON.stringify(data);
+      if (json.length > MAX_BACKUP_CHARS) {
+        log.warn('Auto-backup skipped: data too large (' + Math.round(json.length / 1024 / 1024) + 'MB)，建议用「导出备份」保存到文件');
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, json);
       log.debug('Auto-backup saved');
     } catch (e) {
       log.warn('Auto-backup failed', e);

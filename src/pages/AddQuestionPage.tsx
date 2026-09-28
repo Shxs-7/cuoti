@@ -6,7 +6,6 @@ import { questionService } from '@/services/question.service';
 import { tagService } from '@/services/tag.service';
 import { folderService } from '@/services/folder.service';
 import { compressImage } from '@/lib/compression';
-import { MAX_PHOTOS_PER_QUESTION } from '@/lib/constants';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
@@ -57,10 +56,6 @@ export function AddQuestionPage() {
   const handlePhotoAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    if (photos.length + files.length > MAX_PHOTOS_PER_QUESTION) {
-      toast(`最多${MAX_PHOTOS_PER_QUESTION}张图片`, 'error');
-      return;
-    }
     for (let i = 0; i < files.length; i++) {
       try {
         const compressed = await compressImage(files[i]);
@@ -122,7 +117,7 @@ export function AddQuestionPage() {
 
       {/* Photos */}
       <div>
-        <label className="block text-sm font-medium text-gray-600 mb-1">图片 ({photos.length}/{MAX_PHOTOS_PER_QUESTION})</label>
+        <label className="block text-sm font-medium text-gray-600 mb-1">图片 ({photos.length})</label>
         <div className="flex flex-wrap gap-2">
           {photos.map((p, idx) => (
             <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
@@ -135,15 +130,13 @@ export function AddQuestionPage() {
               </button>
             </div>
           ))}
-          {photos.length < MAX_PHOTOS_PER_QUESTION && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 active:border-primary-400 active:text-primary-500"
-            >
-              <span className="text-xl">📷</span>
-              <span className="text-[10px] mt-0.5">添加</span>
-            </button>
-          )}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 active:border-primary-400 active:text-primary-500"
+          >
+            <span className="text-xl">📷</span>
+            <span className="text-[10px] mt-0.5">添加</span>
+          </button>
         </div>
         <input
           ref={fileInputRef}
